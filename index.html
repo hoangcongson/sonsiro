@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>HCS - XEM TRUYỀN HÌNH</title>
 <meta name="description" content="Xem truyền hình trực tuyến miễn phí — Hoàng Công Sơn">
-<meta name="version" content="2026.09.28.2">
+<meta name="version" content="2026.09.28.3">
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <style>
 :root{--teal:#39a982;--teal2:#237b68;--mint:#dff5ed;--deep:#126052;--ink:#15332d;--line:#c5e6dc}
@@ -670,6 +670,26 @@
 
 /* === Quality glass dropdown === */
 .quality-wrap{position:relative;z-index:80}
+/* Mobile landscape button */
+.rotate-btn{display:none;border:1px solid rgba(255,255,255,.30);background:rgba(255,255,255,.14);color:#fff;border-radius:9px;padding:7px 9px;font-size:12px;font-weight:800;cursor:pointer;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);align-items:center;gap:4px;white-space:nowrap}
+.rotate-btn:hover{background:rgba(255,255,255,.22)}
+.lock-btn{display:none;border:1px solid rgba(255,255,255,.30);background:rgba(255,255,255,.14);color:#fff;border-radius:9px;padding:7px 9px;font-size:12px;font-weight:800;cursor:pointer;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);align-items:center;gap:4px;white-space:nowrap}
+.lock-btn:hover{background:rgba(255,255,255,.22)}
+.mobile-lock-shield{display:none;position:fixed;inset:0;z-index:100000;background:transparent;touch-action:none}
+.mobile-lock-shield.active{display:block}
+.mobile-unlock{position:fixed;right:14px;top:14px;z-index:100001;display:none;border:1px solid rgba(255,255,255,.35);background:rgba(15,45,38,.78);color:#fff;border-radius:999px;padding:10px 13px;font-size:13px;font-weight:900;box-shadow:0 8px 25px rgba(0,0,0,.28);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);touch-action:auto}
+.mobile-unlock.active{display:block}
+@media(max-width:900px){.lock-btn{display:inline-flex}}
+@media(max-width:600px){.lock-btn{padding:6px 8px;font-size:11px}.lock-btn span{display:none}.mobile-unlock{right:10px;top:10px;padding:9px 12px;font-size:12px}}
+
+@media(max-width:900px){
+  .rotate-btn{display:inline-flex}
+  .player-wrap.mobile-landscape{position:fixed;z-index:9999;left:50%;top:50%;width:100vh;height:100vw;max-width:none;max-height:none;aspect-ratio:auto;transform:translate(-50%,-50%) rotate(90deg);transform-origin:center center;border-radius:0;box-shadow:0 0 0 9999px #000;}
+  .player-wrap.mobile-landscape video{width:100%;height:100%;object-fit:contain}
+  body.mobile-landscape-lock{overflow:hidden!important}
+}
+@media(max-width:600px){.rotate-btn{padding:6px 8px;font-size:11px}.rotate-btn span{display:none}}
+
 .quality-button{
   display:flex;
   align-items:center;
@@ -1119,20 +1139,6 @@
 }
 
 
-@media(max-width:900px){
-  .tabs,
-  .side .group-list{
-    touch-action:pan-x;
-    overscroll-behavior-x:contain;
-    -webkit-overflow-scrolling:touch;
-    scroll-snap-type:x proximity;
-  }
-  .tabs .tab,
-  .side .gitem{
-    scroll-snap-align:start;
-  }
-}
-
 
 /* === Final mobile sizing fix === */
 @media(max-width:600px){
@@ -1384,6 +1390,25 @@
   }
 }
 
+
+/* Mobile: vuốt chỉ để kéo thanh danh mục ngang, không đổi nhóm */
+@media(max-width:900px){
+  .tabs,
+  .side .group-list{
+    overflow-x:auto;
+    overflow-y:hidden;
+    touch-action:pan-x;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;
+    scroll-behavior:smooth;
+  }
+
+  .tabs .tab,
+  .side .gitem{
+    flex:0 0 auto;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1406,6 +1431,8 @@
 <div class="player-head">
   <span id="playerTitle">▶ Chọn một kênh để bắt đầu</span>
   <div class="player-tools">
+    <button id="rotateBtn" class="rotate-btn" type="button" aria-label="Xoay ngang" title="Xoay ngang">↻ <span>Xoay ngang</span></button>
+    <button id="lockBtn" class="lock-btn" type="button" aria-label="Khóa màn hình" title="Khóa thao tác">🔒 <span>Khóa</span></button>
     <div class="quality-wrap">
       <button id="qualityButton" class="quality-button" type="button" aria-haspopup="menu" aria-expanded="false">
         ⚙️ <span id="qualityButtonText">Tự động</span> <span class="quality-chevron">⌄</span>
@@ -1415,6 +1442,8 @@
   </div>
 </div>
 <div class="player-wrap"><video id="player" controls playsinline></video></div>
+<div id="mobileLockShield" class="mobile-lock-shield" aria-hidden="true"></div>
+<button id="mobileUnlock" class="mobile-unlock" type="button" aria-label="Mở khóa">🔓 Mở khóa</button>
 <div class="now" id="hint">Chọn kênh bên dưới để phát. HLS hỗ trợ tốt trên Safari/iPhone.</div>
 <div class="tabs-shell"><div class="dock-orb" aria-hidden="true"></div><div class="tabs" id="tabs"></div></div>
 <section class="section"><div class="section-title">✨ CHỌN KÊNH TRUYỀN HÌNH</div><div class="channels" id="channels"></div></section>
@@ -1697,49 +1726,6 @@ function toggleFavorite(event,index){
 }
 
 
-function initMobileSwipeGroups(){
-  const targets=[
-    document.getElementById("tabs"),
-    document.getElementById("groups")
-  ].filter(Boolean);
-
-  targets.forEach(el=>{
-    let startX=0;
-    let startY=0;
-    let tracking=false;
-
-    el.addEventListener("touchstart",e=>{
-      if(!e.touches||!e.touches[0]) return;
-      startX=e.touches[0].clientX;
-      startY=e.touches[0].clientY;
-      tracking=true;
-    },{passive:true});
-
-    el.addEventListener("touchend",e=>{
-      if(!tracking||!e.changedTouches||!e.changedTouches[0]) return;
-      tracking=false;
-
-      const dx=e.changedTouches[0].clientX-startX;
-      const dy=e.changedTouches[0].clientY-startY;
-
-      if(Math.abs(dx)<55 || Math.abs(dx)<Math.abs(dy)*1.25) return;
-
-      const index=GROUPS.indexOf(currentGroup);
-      if(index<0) return;
-
-      // Vuốt trái = nhóm kế tiếp, vuốt phải = nhóm trước.
-      const nextIndex=dx<0 ? Math.min(GROUPS.length-1,index+1) : Math.max(0,index-1);
-      if(nextIndex!==index){
-        selectGroup(GROUPS[nextIndex]);
-        const active=el.querySelector(".active");
-        if(active && active.scrollIntoView){
-          active.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
-        }
-      }
-    },{passive:true});
-  });
-}
-
 function selectGroup(g){
   currentGroup=g;
   renderGroups();
@@ -1908,6 +1894,75 @@ function playChannel(i){
 
   const video=document.getElementById("player");
   const title=document.getElementById("playerTitle");
+
+  // Mobile landscape toggle: use native orientation lock when supported,
+  // otherwise fall back to a CSS-rotated fullscreen player.
+  const rotateBtn=document.getElementById("rotateBtn");
+  const playerWrap=document.querySelector(".player-wrap");
+  let mobileLandscape=false;
+  async function toggleMobileLandscape(){
+    if(!rotateBtn || !playerWrap || !window.matchMedia("(max-width:900px)").matches) return;
+    mobileLandscape=!mobileLandscape;
+    if(mobileLandscape){
+      playerWrap.classList.add("mobile-landscape");
+      document.body.classList.add("mobile-landscape-lock");
+      rotateBtn.innerHTML="↻ <span>Thu nhỏ</span>";
+      rotateBtn.setAttribute("aria-label","Thoát chế độ ngang");
+      try{
+        if(document.documentElement.requestFullscreen && !document.fullscreenElement){
+          await document.documentElement.requestFullscreen();
+        }
+        if(screen.orientation && screen.orientation.lock){
+          await screen.orientation.lock("landscape");
+        }
+      }catch(e){}
+    }else{
+      try{
+        if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
+      }catch(e){}
+      if(document.fullscreenElement && document.exitFullscreen){
+        try{await document.exitFullscreen();}catch(e){}
+      }
+      playerWrap.classList.remove("mobile-landscape");
+      document.body.classList.remove("mobile-landscape-lock");
+      setMobileTouchLock(false);
+      rotateBtn.innerHTML="↻ <span>Xoay ngang</span>";
+      rotateBtn.setAttribute("aria-label","Xoay ngang");
+    }
+  }
+  if(rotateBtn) rotateBtn.addEventListener("click",toggleMobileLandscape);
+  const lockBtn=document.getElementById("lockBtn");
+  const lockShield=document.getElementById("mobileLockShield");
+  const unlockBtn=document.getElementById("mobileUnlock");
+  let mobileTouchLocked=false;
+  function setMobileTouchLock(locked){
+    mobileTouchLocked=!!locked;
+    document.body.classList.toggle("mobile-touch-locked",mobileTouchLocked);
+    lockShield?.classList.toggle("active",mobileTouchLocked);
+    unlockBtn?.classList.toggle("active",mobileTouchLocked);
+    lockShield?.setAttribute("aria-hidden",String(!mobileTouchLocked));
+    if(lockBtn){
+      lockBtn.innerHTML=mobileTouchLocked?'🔒 <span>Đã khóa</span>':'🔒 <span>Khóa</span>';
+      lockBtn.setAttribute("aria-label",mobileTouchLocked?"Đã khóa thao tác":"Khóa thao tác");
+      lockBtn.title=mobileTouchLocked?"Đã khóa — bấm Mở khóa để thao tác":"Khóa thao tác";
+    }
+  }
+  function toggleMobileTouchLock(){
+    if(!window.matchMedia("(max-width:900px)").matches) return;
+    setMobileTouchLock(!mobileTouchLocked);
+  }
+  lockBtn?.addEventListener("click",toggleMobileTouchLock);
+  unlockBtn?.addEventListener("click",()=>setMobileTouchLock(false));
+  lockShield?.addEventListener("touchstart",e=>e.preventDefault(),{passive:false});
+  lockShield?.addEventListener("click",e=>e.preventDefault());
+
+  document.addEventListener("fullscreenchange",()=>{
+    if(!document.fullscreenElement && mobileLandscape && !window.matchMedia("(max-width:900px)").matches){
+      mobileLandscape=false;
+      playerWrap?.classList.remove("mobile-landscape");
+      document.body.classList.remove("mobile-landscape-lock");
+    }
+  });
   const hint=document.getElementById("hint");
 
   title.textContent="▶ "+c.name;
@@ -2142,7 +2197,6 @@ function startStatusClock(){
 setupQualitySelector();
 
 setupQualitySelector();
-initMobileSwipeGroups();
 renderGroups();renderTabs();renderChannels();renderCurrentDate();startStatusClock();
 </script>
 </body>
