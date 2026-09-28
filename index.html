@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <title>HCS - XEM TRUYỀN HÌNH</title>
 <meta name="description" content="Xem truyền hình trực tuyến miễn phí — Hoàng Công Sơn">
 <meta name="version" content="2026.09.28.3">
@@ -668,6 +671,16 @@
 .quality-select:disabled{opacity:.58;cursor:not-allowed}
 
 
+
+/* Landscape overlay controls: remain visible while the player is rotated */
+.landscape-controls{display:none;position:fixed;z-index:100003;top:12px;right:12px;gap:8px;align-items:center;pointer-events:auto}
+.landscape-controls.active{display:flex}
+.landscape-lock-btn.is-locked{background:rgba(170,45,58,.58);border-color:rgba(255,190,200,.58);box-shadow:0 0 0 1px rgba(255,255,255,.10),0 8px 22px rgba(0,0,0,.22)}
+.landscape-control-btn{width:42px;height:42px;border:1px solid rgba(255,255,255,.42);border-radius:12px;background:rgba(10,28,24,.72);color:#fff;font-size:21px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.35);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);touch-action:manipulation}
+.landscape-control-btn:active{transform:scale(.94);background:rgba(10,28,24,.9)}
+.landscape-close-btn{font-size:19px}
+@media(max-width:600px){.landscape-control-btn{width:40px;height:40px}.landscape-controls{top:10px;right:10px;gap:7px}}
+
 /* === Quality glass dropdown === */
 .quality-wrap{position:relative;z-index:80}
 /* Mobile landscape button */
@@ -899,16 +912,18 @@
   justify-items:start;
   gap:3px;
   min-width:190px;
-  font-family:"SF Pro Display","Avenir Next","Helvetica Neue","Segoe UI",Arial,sans-serif;
+  font-family:"Be Vietnam Pro",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
   font-variant-numeric:tabular-nums;
+  font-feature-settings:"kern" 1,"liga" 1;
   -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
   text-rendering:optimizeLegibility;
 }
 
 .status-label{
   font-size:11px;
-  line-height:1;
-  letter-spacing:1.7px;
+  line-height:1.18;
+  letter-spacing:1.35px;
   color:#a8ded1;
   font-weight:850;
   text-transform:uppercase;
@@ -917,9 +932,9 @@
 
 .status-value{
   font-size:28px;
-  line-height:.92;
+  line-height:1.05;
   color:#ffffff;
-  font-weight:900;
+  font-weight:800;
   letter-spacing:.35px;
   white-space:nowrap;
   text-shadow:
@@ -941,9 +956,9 @@
     linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));
   color:#bde9dd;
   font-size:8px;
-  line-height:1;
-  font-weight:800;
-  letter-spacing:.4px;
+  line-height:1.2;
+  font-weight:600;
+  letter-spacing:.15px;
   white-space:nowrap;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.12),
@@ -1441,7 +1456,14 @@
     </div>
   </div>
 </div>
-<div class="player-wrap"><video id="player" controls playsinline></video></div>
+<div class="player-wrap">
+  <video id="player" controls playsinline></video>
+  <div id="landscapeControls" class="landscape-controls" aria-hidden="true">
+    <button id="landscapeRotateBtn" class="landscape-control-btn" type="button" aria-label="Xoay lại" title="Xoay lại">↻</button>
+    <button id="landscapeLockBtn" class="landscape-control-btn landscape-lock-btn" type="button" aria-label="Khóa thao tác" title="Khóa thao tác">🔒</button>
+    <button id="landscapeCloseBtn" class="landscape-control-btn landscape-close-btn" type="button" aria-label="Thoát xoay ngang" title="Thoát xoay ngang">✕</button>
+  </div>
+</div>
 <div id="mobileLockShield" class="mobile-lock-shield" aria-hidden="true"></div>
 <button id="mobileUnlock" class="mobile-unlock" type="button" aria-label="Mở khóa">🔓 Mở khóa</button>
 <div class="now" id="hint">Chọn kênh bên dưới để phát. HLS hỗ trợ tốt trên Safari/iPhone.</div>
@@ -1613,6 +1635,154 @@ function favoriteChannels(){
 
 let hls=null;
 let currentChannelIndex=null;
+let mobileLandscape=false;
+let cssLandscapeFallback=false;
+
+function isMobileView(){
+  return window.matchMedia("(max-width:900px)").matches;
+}
+
+async function enterMobileLandscape(){
+  if(!isMobileView()) return;
+  const playerWrap=document.querySelector(".player-wrap");
+  const rotateBtn=document.getElementById("rotateBtn");
+  const landscapeControls=document.getElementById("landscapeControls");
+  mobileLandscape=true;
+  document.body.classList.add("mobile-landscape-lock");
+  landscapeControls?.classList.add("active");
+  landscapeControls?.setAttribute("aria-hidden","false");
+  if(rotateBtn){
+    rotateBtn.innerHTML="↻ <span>Thu nhỏ</span>";
+    rotateBtn.setAttribute("aria-label","Thoát chế độ ngang");
+  }
+
+  // Khi fullscreen, ưu tiên khóa xoay thật của thiết bị.
+  // Chỉ dùng CSS xoay giả lập nếu trình duyệt không hỗ trợ orientation lock.
+  let orientationLocked=false;
+  try{
+    if(screen.orientation?.lock){
+      await screen.orientation.lock("landscape");
+      orientationLocked=true;
+    }
+  }catch(e){}
+
+  cssLandscapeFallback=!orientationLocked;
+  playerWrap?.classList.toggle("mobile-landscape",cssLandscapeFallback);
+}
+
+function exitMobileLandscape(){
+  const playerWrap=document.querySelector(".player-wrap");
+  const rotateBtn=document.getElementById("rotateBtn");
+  const landscapeControls=document.getElementById("landscapeControls");
+  mobileLandscape=false;
+  cssLandscapeFallback=false;
+  playerWrap?.classList.remove("mobile-landscape");
+  document.body.classList.remove("mobile-landscape-lock");
+  landscapeControls?.classList.remove("active");
+  landscapeControls?.setAttribute("aria-hidden","true");
+  try{
+    if(screen.orientation?.unlock) screen.orientation.unlock();
+  }catch(e){}
+  if(rotateBtn){
+    rotateBtn.innerHTML="↻ <span>Xoay ngang</span>";
+    rotateBtn.setAttribute("aria-label","Xoay ngang");
+  }
+}
+
+async function toggleMobileLandscape(){
+  if(!isMobileView()) return;
+  if(mobileLandscape){
+    if(document.fullscreenElement && document.exitFullscreen){
+      try{await document.exitFullscreen();return;}catch(e){}
+    }
+    exitMobileLandscape();
+    return;
+  }
+  try{
+    if(document.documentElement.requestFullscreen && !document.fullscreenElement){
+      await document.documentElement.requestFullscreen();
+    }
+  }catch(e){}
+  // Nếu fullscreen không được cấp quyền, vẫn dùng chế độ xoay dự phòng.
+  if(!document.fullscreenElement) await enterMobileLandscape();
+}
+
+function setupMobileLandscape(){
+  const rotateBtn=document.getElementById("rotateBtn");
+  const landscapeRotateBtn=document.getElementById("landscapeRotateBtn");
+  const landscapeLockBtn=document.getElementById("landscapeLockBtn");
+  const landscapeCloseBtn=document.getElementById("landscapeCloseBtn");
+  rotateBtn?.addEventListener("click",toggleMobileLandscape);
+  // Các nút overlay vẫn nằm trên video khi đang xoay ngang.
+  landscapeRotateBtn?.addEventListener("click",async()=>{
+    if(!mobileLandscape) return;
+    try{
+      if(screen.orientation?.lock) await screen.orientation.lock("landscape");
+    }catch(e){}
+  });
+  landscapeLockBtn?.addEventListener("click",()=>{
+    if(!mobileLandscape || !isMobileView()) return;
+    setMobileTouchLock(!mobileTouchLocked);
+  });
+  landscapeCloseBtn?.addEventListener("click",async()=>{
+    if(document.fullscreenElement && document.exitFullscreen){
+      try{await document.exitFullscreen();return;}catch(e){}
+    }
+    exitMobileLandscape();
+  });
+
+  // Bấm nút phóng to của trình phát cũng tự động xoay ngang.
+  document.addEventListener("fullscreenchange",async()=>{
+    if(!isMobileView()) return;
+    if(document.fullscreenElement){
+      await enterMobileLandscape();
+    }else{
+      exitMobileLandscape();
+      setMobileTouchLock(false);
+    }
+  });
+
+  window.addEventListener("resize",()=>{
+    if(!isMobileView() && mobileLandscape) exitMobileLandscape();
+  });
+}
+
+let mobileTouchLocked=false;
+function setMobileTouchLock(locked){
+  mobileTouchLocked=!!locked;
+  const lockShield=document.getElementById("mobileLockShield");
+  const unlockBtn=document.getElementById("mobileUnlock");
+  const lockBtn=document.getElementById("lockBtn");
+  const landscapeLockBtn=document.getElementById("landscapeLockBtn");
+  document.body.classList.toggle("mobile-touch-locked",mobileTouchLocked);
+  lockShield?.classList.toggle("active",mobileTouchLocked);
+  unlockBtn?.classList.toggle("active",mobileTouchLocked);
+  lockShield?.setAttribute("aria-hidden",String(!mobileTouchLocked));
+  if(lockBtn){
+    lockBtn.innerHTML=mobileTouchLocked?'🔒 <span>Đã khóa</span>':'🔒 <span>Khóa</span>';
+    lockBtn.setAttribute("aria-label",mobileTouchLocked?"Đã khóa thao tác":"Khóa thao tác");
+    lockBtn.title=mobileTouchLocked?"Đã khóa — bấm Mở khóa để thao tác":"Khóa thao tác";
+  }
+  if(landscapeLockBtn){
+    landscapeLockBtn.textContent=mobileTouchLocked?'🔓':'🔒';
+    landscapeLockBtn.classList.toggle("is-locked",mobileTouchLocked);
+    landscapeLockBtn.setAttribute("aria-label",mobileTouchLocked?"Mở khóa thao tác":"Khóa thao tác");
+    landscapeLockBtn.title=mobileTouchLocked?"Bấm để mở khóa":"Bấm để khóa màn hình";
+  }
+}
+
+function setupMobileTouchLock(){
+  const lockBtn=document.getElementById("lockBtn");
+  const lockShield=document.getElementById("mobileLockShield");
+  const unlockBtn=document.getElementById("mobileUnlock");
+  lockBtn?.addEventListener("click",()=>{
+    if(isMobileView()) setMobileTouchLock(!mobileTouchLocked);
+  });
+  unlockBtn?.addEventListener("click",()=>setMobileTouchLock(false));
+  lockShield?.addEventListener("touchstart",e=>e.preventDefault(),{passive:false});
+  lockShield?.addEventListener("click",e=>e.preventDefault());
+}
+
 
 const GROUPS=[...new Set([...CHANNELS.map(x=>x.group),"❤️ YÊU THÍCH"])]
   .sort((a,b)=>{
@@ -1895,74 +2065,6 @@ function playChannel(i){
   const video=document.getElementById("player");
   const title=document.getElementById("playerTitle");
 
-  // Mobile landscape toggle: use native orientation lock when supported,
-  // otherwise fall back to a CSS-rotated fullscreen player.
-  const rotateBtn=document.getElementById("rotateBtn");
-  const playerWrap=document.querySelector(".player-wrap");
-  let mobileLandscape=false;
-  async function toggleMobileLandscape(){
-    if(!rotateBtn || !playerWrap || !window.matchMedia("(max-width:900px)").matches) return;
-    mobileLandscape=!mobileLandscape;
-    if(mobileLandscape){
-      playerWrap.classList.add("mobile-landscape");
-      document.body.classList.add("mobile-landscape-lock");
-      rotateBtn.innerHTML="↻ <span>Thu nhỏ</span>";
-      rotateBtn.setAttribute("aria-label","Thoát chế độ ngang");
-      try{
-        if(document.documentElement.requestFullscreen && !document.fullscreenElement){
-          await document.documentElement.requestFullscreen();
-        }
-        if(screen.orientation && screen.orientation.lock){
-          await screen.orientation.lock("landscape");
-        }
-      }catch(e){}
-    }else{
-      try{
-        if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
-      }catch(e){}
-      if(document.fullscreenElement && document.exitFullscreen){
-        try{await document.exitFullscreen();}catch(e){}
-      }
-      playerWrap.classList.remove("mobile-landscape");
-      document.body.classList.remove("mobile-landscape-lock");
-      setMobileTouchLock(false);
-      rotateBtn.innerHTML="↻ <span>Xoay ngang</span>";
-      rotateBtn.setAttribute("aria-label","Xoay ngang");
-    }
-  }
-  if(rotateBtn) rotateBtn.addEventListener("click",toggleMobileLandscape);
-  const lockBtn=document.getElementById("lockBtn");
-  const lockShield=document.getElementById("mobileLockShield");
-  const unlockBtn=document.getElementById("mobileUnlock");
-  let mobileTouchLocked=false;
-  function setMobileTouchLock(locked){
-    mobileTouchLocked=!!locked;
-    document.body.classList.toggle("mobile-touch-locked",mobileTouchLocked);
-    lockShield?.classList.toggle("active",mobileTouchLocked);
-    unlockBtn?.classList.toggle("active",mobileTouchLocked);
-    lockShield?.setAttribute("aria-hidden",String(!mobileTouchLocked));
-    if(lockBtn){
-      lockBtn.innerHTML=mobileTouchLocked?'🔒 <span>Đã khóa</span>':'🔒 <span>Khóa</span>';
-      lockBtn.setAttribute("aria-label",mobileTouchLocked?"Đã khóa thao tác":"Khóa thao tác");
-      lockBtn.title=mobileTouchLocked?"Đã khóa — bấm Mở khóa để thao tác":"Khóa thao tác";
-    }
-  }
-  function toggleMobileTouchLock(){
-    if(!window.matchMedia("(max-width:900px)").matches) return;
-    setMobileTouchLock(!mobileTouchLocked);
-  }
-  lockBtn?.addEventListener("click",toggleMobileTouchLock);
-  unlockBtn?.addEventListener("click",()=>setMobileTouchLock(false));
-  lockShield?.addEventListener("touchstart",e=>e.preventDefault(),{passive:false});
-  lockShield?.addEventListener("click",e=>e.preventDefault());
-
-  document.addEventListener("fullscreenchange",()=>{
-    if(!document.fullscreenElement && mobileLandscape && !window.matchMedia("(max-width:900px)").matches){
-      mobileLandscape=false;
-      playerWrap?.classList.remove("mobile-landscape");
-      document.body.classList.remove("mobile-landscape-lock");
-    }
-  });
   const hint=document.getElementById("hint");
 
   title.textContent="▶ "+c.name;
@@ -2197,7 +2299,7 @@ function startStatusClock(){
 setupQualitySelector();
 
 setupQualitySelector();
-renderGroups();renderTabs();renderChannels();renderCurrentDate();startStatusClock();
+setupMobileLandscape();setupMobileTouchLock();renderGroups();renderTabs();renderChannels();renderCurrentDate();startStatusClock();
 </script>
 </body>
 </html>
