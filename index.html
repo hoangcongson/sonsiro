@@ -1,115 +1,1436 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SonTV — Live TV</title>
-<meta name="description" content="SonTV — xem truyền hình trực tiếp từ playlist M3U">
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Son TV — Xem truyền hình trực tuyến</title>
+<meta name="description" content="Xem truyền hình trực tuyến miễn phí — Son TV">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <style>
-:root{--bg:#02070d;--panel:rgba(7,20,34,.82);--panel2:rgba(10,28,45,.9);--line:rgba(45,190,255,.2);--blue:#25c5ff;--text:#f4f8fc;--muted:#8fa5b8;--green:#19e6a3}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);background:radial-gradient(900px 500px at 80% 0%,rgba(0,163,255,.13),transparent 60%),radial-gradient(700px 500px at 0 70%,rgba(45,76,255,.08),transparent 60%),var(--bg)}
-body:before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);background-size:42px 42px}
-button,input{font:inherit}.wrap{width:min(1450px,calc(100% - 32px));margin:auto}
-header{height:72px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07)}
-.brand{display:flex;align-items:center;gap:12px}.logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#19bfff,#5367ff);font-weight:950;box-shadow:0 0 28px rgba(37,197,255,.2)}.brand strong{font-size:15px}.brand small{display:block;color:var(--muted);font-size:9px;margin-top:3px}.m3u{display:flex;align-items:center;gap:8px;color:#b8c8d7;font-size:10px}.m3u code{border:1px solid var(--line);padding:8px 10px;border-radius:9px;background:rgba(255,255,255,.035);color:#72d9ff}
-.btn{border:1px solid var(--line);background:rgba(5,20,34,.72);color:#dcefff;border-radius:9px;padding:8px 12px;font-size:10px;font-weight:800;cursor:pointer}.btn:hover{border-color:#25c5ff;background:rgba(12,43,65,.85)}
-.hero{padding:24px 0 15px}.eyebrow{font-size:8px;letter-spacing:3px;color:var(--blue);font-weight:900}.hero h1{font-size:36px;letter-spacing:-1.8px;margin:8px 0 5px}.hero p{color:var(--muted);font-size:11px;margin:0}
-.tv{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:15px}.player-card,.list-card{border:1px solid var(--line);border-radius:15px;background:linear-gradient(145deg,rgba(8,25,41,.9),rgba(3,12,21,.94));box-shadow:0 18px 55px rgba(0,0,0,.2);overflow:hidden}.screen{position:relative;background:#000;aspect-ratio:16/9;min-height:360px}.screen video{width:100%;height:100%;display:block;background:#000;object-fit:contain}.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;background:radial-gradient(circle at center,rgba(19,64,91,.22),transparent 55%);pointer-events:none}.empty.hide{display:none}.empty-box{padding:25px}.play{width:58px;height:58px;margin:auto;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#18bfff,#5967ff);font-size:23px;box-shadow:0 0 40px rgba(37,197,255,.22)}.empty strong{display:block;margin-top:13px;font-size:14px}.empty span{display:block;margin-top:5px;color:#8097aa;font-size:9px}
-.now{padding:13px 15px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;gap:10px}.now-name{font-size:12px;font-weight:800}.live{display:inline-flex;align-items:center;gap:6px;color:#ff6576;font-size:8px;border:1px solid rgba(255,101,118,.3);border-radius:12px;padding:5px 8px}.live i{width:5px;height:5px;border-radius:50%;background:#ff6576;box-shadow:0 0 8px #ff6576}
-.list-head{padding:13px 14px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between}.list-head strong{font-size:12px}.count{color:#7890a4;font-size:8px}.search{margin:11px 12px 8px;width:calc(100% - 24px);padding:10px 11px;border-radius:9px;border:1px solid rgba(255,255,255,.09);outline:0;background:rgba(0,0,0,.2);color:#fff;font-size:10px}.search:focus{border-color:rgba(37,197,255,.55)}.groups{display:flex;gap:6px;overflow:auto;padding:0 12px 9px;scrollbar-width:none}.groups::-webkit-scrollbar{display:none}.group{white-space:nowrap;padding:6px 9px;border-radius:15px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);color:#91a7b9;font-size:8px;cursor:pointer}.group.active{color:#fff;border-color:rgba(37,197,255,.5);background:rgba(37,197,255,.1)}.channels{height:calc(100vh - 285px);min-height:330px;overflow:auto;padding:0 8px 10px}.channel{width:100%;display:flex;align-items:center;gap:10px;text-align:left;border:1px solid transparent;border-radius:10px;background:transparent;color:#d9e6f1;padding:9px 8px;cursor:pointer}.channel:hover{background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.07)}.channel.active{background:linear-gradient(90deg,rgba(37,197,255,.13),rgba(79,100,255,.06));border-color:rgba(37,197,255,.32)}.icon{width:38px;height:38px;flex:none;border-radius:9px;display:grid;place-items:center;background:#0a263c;border:1px solid rgba(37,197,255,.15);overflow:hidden;color:#55cfff;font-size:8px;font-weight:900}.icon img{width:100%;height:100%;object-fit:contain;background:#fff}.channel-name{font-size:10px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.channel-group{font-size:7px;color:#71899c;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bottom{margin:14px 0 30px;display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:rgba(5,18,30,.72)}.source{font-size:9px;color:#8299aa}.source a{color:#59d2ff;word-break:break-all}.actions{display:flex;gap:7px}
-.status{font-size:9px;color:#7f96a8;margin-top:7px;min-height:15px}.stream-error{display:none;position:absolute;inset:0;z-index:5;align-items:center;justify-content:center;flex-direction:column;gap:10px;text-align:center;padding:25px;background:linear-gradient(180deg,rgba(2,7,13,.25),rgba(2,7,13,.9));backdrop-filter:blur(3px)}.stream-error.show{display:flex}.stream-error strong{font-size:16px}.stream-error span{max-width:480px;color:#9fb2c4;font-size:10px;line-height:1.6}.screen{position:relative}
-@media(max-width:900px){.tv{grid-template-columns:1fr}.channels{height:430px}.screen{min-height:0}.m3u code{display:none}.hero h1{font-size:30px}.bottom{flex-direction:column;align-items:flex-start}}
-@media(max-width:560px){.wrap{width:min(100% - 18px,1450px)}header{height:62px}.brand small{display:none}.m3u{display:none}.hero{padding-top:18px}.hero h1{font-size:27px}.screen{aspect-ratio:16/10}.channels{height:390px}}
+:root{--teal:#39a982;--teal2:#237b68;--mint:#dff5ed;--deep:#126052;--ink:#15332d;--line:#c5e6dc}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#e8f7f2,#d7f0e8);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
+.container{max-width:1180px;margin:18px auto;padding:0 14px}.header{background:linear-gradient(90deg,var(--teal2),var(--teal));color:#fff;border-radius:14px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 5px 18px #195f4d33}
+.brand{font-size:20px;font-weight:800}.brand small{display:block;font-size:11px;font-weight:500;opacity:.85;margin-top:3px}.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:0;border-radius:9px;padding:9px 12px;font-weight:700;cursor:pointer;text-decoration:none;color:var(--deep);background:#fff}.btn.teal{background:#bff0e1}
+
+/* === HOÀNG CÔNG SƠN Liquid Glass header dock === */
+.header{
+  position:relative;
+  min-height:88px;
+  padding:14px 18px;
+  border:1px solid rgba(255,255,255,.72);
+  border-radius:20px;
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.34),rgba(255,255,255,.10)),
+    linear-gradient(115deg,#217b67,#38aa89 58%,#2a8b72);
+  box-shadow:
+    0 16px 38px rgba(26,102,84,.22),
+    0 5px 16px rgba(26,102,84,.15),
+    inset 0 1px 0 rgba(255,255,255,.56),
+    inset 0 -1px 0 rgba(255,255,255,.12);
+  backdrop-filter:blur(24px) saturate(170%);
+  -webkit-backdrop-filter:blur(24px) saturate(170%);
+  overflow:hidden;
+}
+
+.header::before{
+  content:"";
+  position:absolute;
+  inset:-40% -10%;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 18% 30%,rgba(255,255,255,.22),transparent 22%),
+    radial-gradient(circle at 86% 80%,rgba(115,238,196,.18),transparent 26%),
+    linear-gradient(115deg,transparent 25%,rgba(255,255,255,.20) 48%,transparent 67%);
+  transform:translateX(-18%);
+  animation:headerGlassSweep 8s ease-in-out infinite;
+}
+
+.header::after{
+  content:"";
+  position:absolute;
+  left:10%;
+  right:10%;
+  bottom:0;
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.86),transparent);
+  box-shadow:0 0 14px rgba(255,255,255,.50);
+  animation:headerEdgePulse 3s ease-in-out infinite;
+}
+
+.brand-wrap{
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  gap:13px;
+  min-width:0;
+}
+
+.brand-icon{
+  width:58px;
+  height:58px;
+  flex:0 0 58px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(255,255,255,.62);
+  border-radius:18px;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.44),rgba(255,255,255,.12));
+  box-shadow:
+    0 10px 24px rgba(10,78,63,.20),
+    inset 0 1px 0 rgba(255,255,255,.72),
+    0 0 22px rgba(123,240,202,.18);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  font-size:30px;
+  animation:brandIconFloat 4s ease-in-out infinite;
+}
+
+.brand{
+  position:relative;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.brand-name{
+  position:relative;
+  font-size:clamp(24px,3vw,34px);
+  line-height:1;
+  font-weight:900;
+  letter-spacing:.7px;
+  white-space:nowrap;
+  color:#fff;
+  text-shadow:
+    0 2px 10px rgba(9,72,58,.34),
+    0 0 18px rgba(145,255,214,.18);
+}
+
+.brand-sub{
+  margin-top:7px;
+  font-size:11px;
+  line-height:1.1;
+  font-weight:800;
+  letter-spacing:1.8px;
+  color:rgba(240,255,250,.92);
+  text-transform:uppercase;
+}
+
+.brand-glow{
+  width:110px;
+  height:3px;
+  margin-top:9px;
+  border-radius:999px;
+  background:linear-gradient(90deg,#dffff2,rgba(223,255,242,.08));
+  box-shadow:0 0 13px rgba(205,255,236,.54);
+  animation:brandLinePulse 2.4s ease-in-out infinite;
+}
+
+.actions{
+  position:relative;
+  z-index:2;
+}
+
+.header .btn{
+  border:1px solid rgba(255,255,255,.60);
+  background:linear-gradient(180deg,rgba(255,255,255,.76),rgba(255,255,255,.43));
+  box-shadow:
+    0 7px 16px rgba(19,87,70,.13),
+    inset 0 1px 0 rgba(255,255,255,.90);
+  backdrop-filter:blur(16px) saturate(150%);
+  -webkit-backdrop-filter:blur(16px) saturate(150%);
+}
+
+.header .btn:hover{
+  transform:translateY(-2px);
+  box-shadow:
+    0 10px 22px rgba(19,87,70,.19),
+    0 0 16px rgba(111,232,195,.16),
+    inset 0 1px 0 rgba(255,255,255,.98);
+}
+
+@keyframes headerGlassSweep{
+  0%,25%{transform:translateX(-18%)}
+  50%,68%{transform:translateX(18%)}
+  100%{transform:translateX(-18%)}
+}
+@keyframes headerEdgePulse{
+  0%,100%{opacity:.34;transform:scaleX(.76)}
+  50%{opacity:.95;transform:scaleX(1)}
+}
+@keyframes brandIconFloat{
+  0%,100%{transform:translateY(0) rotate(0deg)}
+  50%{transform:translateY(-2px) rotate(-1deg)}
+}
+@keyframes brandLinePulse{
+  0%,100%{opacity:.38;transform:scaleX(.75)}
+  50%{opacity:1;transform:scaleX(1)}
+}
+
+@media(max-width:600px){
+  .header{
+    min-height:82px;
+    padding:12px 13px;
+    border-radius:17px;
+    gap:10px;
+  }
+  .brand-wrap{gap:9px}
+  .brand-icon{
+    width:46px;
+    height:46px;
+    flex-basis:46px;
+    border-radius:14px;
+    font-size:23px;
+  }
+  .brand-name{
+    font-size:27px;
+    letter-spacing:.35px;
+  }
+  .brand-sub{
+    margin-top:5px;
+    font-size:8px;
+    letter-spacing:.8px;
+  }
+  .brand-glow{
+    margin-top:6px;
+    width:82px;
+  }
+  .header .actions{
+    gap:5px;
+  }
+  .header .btn{
+    padding:7px 9px;
+    font-size:10px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .header::before,.header::after,.brand-icon,.brand-glow{
+    animation:none!important;
+  }
+}
+
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:14px;margin-top:14px}.player-card,.side,.section{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 7px 24px #276e5b18;overflow:hidden}
+.player-head{background:var(--teal);color:#fff;padding:10px 14px;font-weight:800}.player-wrap{background:#061713;aspect-ratio:16/9;position:relative}video{width:100%;height:100%;display:block}
+.now{padding:10px 14px;background:#f7fffc;font-weight:700;color:var(--deep)}.tabs{display:flex;gap:7px;overflow:auto;padding:10px;background:#effaf6;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.tab{white-space:nowrap;border:1px solid var(--line);background:#fff;color:var(--deep);padding:8px 12px;border-radius:999px;font-weight:800;cursor:pointer}.tab.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+.channels{padding:14px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.channel{min-width:0;border:1px solid #cfe4de;background:linear-gradient(#fff,#f3fbf8);border-radius:11px;padding:8px;cursor:pointer;transition:.16s;box-shadow:0 2px 7px #245f5012}
+.channel:hover{transform:translateY(-2px);border-color:var(--teal);box-shadow:0 8px 18px #245f5020}.logo{height:48px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:7px;overflow:hidden}.logo img{max-height:42px;max-width:88%;object-fit:contain}.fallback{font-size:18px;font-weight:900;color:var(--teal)}
+.cname{font-size:12px;text-align:center;font-weight:800;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.side{padding:0}.side-title{background:var(--teal);color:#fff;padding:12px;font-weight:900}
+.search{margin:10px;width:calc(100% - 20px);padding:10px;border:1px solid var(--line);border-radius:9px;outline:none}.group-list{padding:0 10px 12px;max-height:580px;overflow:auto}
+.gitem{display:flex;align-items:center;gap:8px;padding:10px;border-radius:9px;margin-top:5px;cursor:pointer;font-weight:800;color:var(--deep)}.gitem:hover,.gitem.active{background:var(--mint)}.gicon{font-size:19px}
+.section-title{background:var(--teal);color:#fff;padding:12px 15px;font-weight:900}.footer{margin-top:14px;background:var(--teal2);color:#eafff8;padding:15px;border-radius:14px;text-align:center;font-size:13px}.footer a{color:#fff;font-weight:800}.empty{padding:30px;text-align:center;color:#64847b;grid-column:1/-1}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.side{order:-1}.group-list{display:flex;overflow:auto;gap:5px}.gitem{white-space:nowrap}.channels{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:600px){.container{padding:0 7px;margin:7px auto}.header{flex-direction:column;align-items:stretch}.actions{justify-content:center}.channels{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:9px}.channel{padding:6px}.logo{height:42px}.logo img{max-height:36px}.cname{font-size:10px}}
+
+
+/* === Liquid Glass panels: category sidebar + channel area === */
+.section,
+.side{
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.78);
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.70),rgba(232,249,243,.40)),
+    rgba(231,248,243,.34);
+  box-shadow:
+    0 18px 42px rgba(27,103,86,.15),
+    0 3px 12px rgba(27,103,86,.08),
+    inset 0 1px 0 rgba(255,255,255,.95),
+    inset 0 -1px 0 rgba(255,255,255,.28);
+  backdrop-filter:blur(24px) saturate(160%);
+  -webkit-backdrop-filter:blur(24px) saturate(160%);
+}
+
+.section::before,
+.side::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+  background:
+    radial-gradient(circle at 15% 0%,rgba(255,255,255,.42),transparent 28%),
+    radial-gradient(circle at 95% 100%,rgba(79,203,170,.14),transparent 34%),
+    linear-gradient(115deg,
+      transparent 14%,
+      rgba(255,255,255,0) 34%,
+      rgba(255,255,255,.36) 46%,
+      rgba(255,255,255,.04) 55%,
+      transparent 72%);
+  transform:translateX(-8%);
+  animation:panelShine 8s ease-in-out infinite;
+}
+
+.section::after,
+.side::after{
+  content:"";
+  position:absolute;
+  left:14%;
+  right:14%;
+  top:0;
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);
+  box-shadow:0 0 14px rgba(255,255,255,.52);
+  opacity:.72;
+  animation:panelEdgePulse 3.2s ease-in-out infinite;
+  pointer-events:none;
+  z-index:3;
+}
+
+.section > *,
+.side > *{
+  position:relative;
+  z-index:2;
+}
+
+.section-title,
+.side-title{
+  border-bottom:1px solid rgba(255,255,255,.30);
+  background:
+    linear-gradient(135deg,rgba(57,174,138,.90),rgba(35,123,104,.88));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.22),
+    0 5px 14px rgba(31,108,88,.12);
+  backdrop-filter:blur(14px) saturate(145%);
+  -webkit-backdrop-filter:blur(14px) saturate(145%);
+}
+
+.group-list{
+  background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.04));
+}
+
+.gitem{
+  position:relative;
+  border:1px solid transparent;
+  background:linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,.10));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.52),
+    0 3px 10px rgba(28,105,86,.05);
+  transition:transform .20s ease,background .20s ease,box-shadow .20s ease,border-color .20s ease;
+  overflow:hidden;
+}
+
+.gitem::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(110deg,transparent 18%,rgba(255,255,255,.55) 50%,transparent 76%);
+  transform:translateX(-125%);
+  transition:transform .60s ease;
+  pointer-events:none;
+}
+
+.gitem:hover::before,
+.gitem.active::before{
+  transform:translateX(125%);
+}
+
+.gitem:hover{
+  transform:translateX(3px);
+  border-color:rgba(255,255,255,.72);
+  background:linear-gradient(180deg,rgba(255,255,255,.48),rgba(255,255,255,.16));
+  box-shadow:
+    0 8px 18px rgba(28,105,86,.13),
+    inset 0 1px 0 rgba(255,255,255,.76);
+}
+
+.gitem.active{
+  border-color:rgba(255,255,255,.80);
+  background:
+    linear-gradient(135deg,rgba(57,174,138,.72),rgba(35,123,104,.58));
+  color:#fff;
+  box-shadow:
+    0 8px 20px rgba(35,123,104,.22),
+    0 0 18px rgba(66,199,160,.18),
+    inset 0 1px 0 rgba(255,255,255,.42);
+  animation:sideActiveGlow 2.8s ease-in-out infinite;
+}
+
+.channels{
+  background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,.06));
+}
+
+.channel{
+  border:1px solid rgba(255,255,255,.72);
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.78),rgba(244,252,249,.34));
+  box-shadow:
+    0 7px 18px rgba(28,105,86,.08),
+    inset 0 1px 0 rgba(255,255,255,.96),
+    inset 0 -1px 0 rgba(255,255,255,.24);
+  backdrop-filter:blur(14px) saturate(145%);
+  -webkit-backdrop-filter:blur(14px) saturate(145%);
+}
+
+.channel:hover{
+  transform:translateY(-3px) scale(1.012);
+  border-color:rgba(80,190,158,.65);
+  box-shadow:
+    0 13px 28px rgba(28,105,86,.16),
+    0 0 18px rgba(80,190,158,.14),
+    inset 0 1px 0 rgba(255,255,255,.98);
+}
+
+@keyframes panelShine{
+  0%,26%{transform:translateX(-12%)}
+  54%,70%{transform:translateX(12%)}
+  100%{transform:translateX(-12%)}
+}
+
+@keyframes panelEdgePulse{
+  0%,100%{opacity:.30;transform:scaleX(.76)}
+  50%{opacity:.90;transform:scaleX(1)}
+}
+
+@keyframes sideActiveGlow{
+  0%,100%{box-shadow:0 8px 20px rgba(35,123,104,.22),0 0 10px rgba(66,199,160,.10),inset 0 1px 0 rgba(255,255,255,.42)}
+  50%{box-shadow:0 10px 24px rgba(35,123,104,.30),0 0 22px rgba(66,199,160,.26),inset 0 1px 0 rgba(255,255,255,.55)}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .section::before,.section::after,.side::before,.side::after,.gitem.active{
+    animation:none!important;
+  }
+}
+
+/* === Liquid Glass floating dock === */
+.tabs{
+  position:sticky;
+  top:10px;
+  z-index:50;
+  margin:10px 10px 14px;
+  padding:8px;
+  gap:8px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border:1px solid rgba(255,255,255,.72);
+  border-radius:22px;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.68),rgba(255,255,255,.28)),
+    rgba(230,250,244,.42);
+  box-shadow:
+    0 14px 34px rgba(24,111,91,.18),
+    inset 0 1px 0 rgba(255,255,255,.9),
+    inset 0 -1px 0 rgba(255,255,255,.2);
+  backdrop-filter: blur(24px) saturate(165%);
+  -webkit-backdrop-filter: blur(24px) saturate(165%);
+}
+.tabs::-webkit-scrollbar{display:none}
+
+.tabs::before{
+  content:"";
+  position:absolute;
+  inset:1px;
+  border-radius:21px;
+  pointer-events:none;
+  background:
+    linear-gradient(115deg,
+      transparent 0%,
+      rgba(255,255,255,0) 35%,
+      rgba(255,255,255,.72) 47%,
+      rgba(255,255,255,.15) 54%,
+      transparent 68%);
+  transform:translateX(-125%);
+  animation:glassSweep 7s ease-in-out infinite;
+  mix-blend-mode:screen;
+}
+
+.tab{
+  position:relative;
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:38px;
+  padding:9px 14px;
+  border:1px solid rgba(255,255,255,.78);
+  border-radius:999px;
+  color:#245f53;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.33));
+  box-shadow:
+    0 5px 13px rgba(31,94,80,.10),
+    inset 0 1px 0 rgba(255,255,255,.98);
+  backdrop-filter:blur(16px) saturate(150%);
+  -webkit-backdrop-filter:blur(16px) saturate(150%);
+  transition:transform .22s ease,box-shadow .22s ease,background .22s ease,color .22s ease;
+  overflow:hidden;
+}
+
+.tab::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(120deg,transparent 15%,rgba(255,255,255,.85) 46%,transparent 76%);
+  transform:translateX(-135%);
+  transition:transform .55s ease;
+}
+.tab:hover::before{transform:translateX(135%)}
+.tab:hover{
+  transform:translateY(-2px) scale(1.025);
+  box-shadow:
+    0 10px 20px rgba(31,94,80,.18),
+    0 0 16px rgba(70,189,157,.15),
+    inset 0 1px 0 rgba(255,255,255,1);
+}
+
+.tab.active{
+  color:#fff;
+  border-color:rgba(255,255,255,.55);
+  background:
+    linear-gradient(135deg,#39ae8a 0%,#2e987a 55%,#22745e 100%);
+  box-shadow:
+    0 8px 20px rgba(35,123,104,.28),
+    0 0 0 1px rgba(255,255,255,.12) inset,
+    0 0 18px rgba(65,198,160,.22);
+  animation:activeGlow 2.8s ease-in-out infinite;
+}
+
+.tab.active::after{
+  content:"";
+  position:absolute;
+  left:18%;
+  right:18%;
+  bottom:4px;
+  height:3px;
+  border-radius:99px;
+  background:rgba(255,255,255,.78);
+  box-shadow:0 0 10px rgba(255,255,255,.7);
+  animation:pulseLine 1.8s ease-in-out infinite;
+}
+
+@keyframes glassSweep{
+  0%,25%{transform:translateX(-125%)}
+  48%,65%{transform:translateX(125%)}
+  100%{transform:translateX(125%)}
+}
+@keyframes activeGlow{
+  0%,100%{box-shadow:0 8px 20px rgba(35,123,104,.28),0 0 0 1px rgba(255,255,255,.12) inset,0 0 12px rgba(65,198,160,.16)}
+  50%{box-shadow:0 10px 26px rgba(35,123,104,.34),0 0 0 1px rgba(255,255,255,.18) inset,0 0 24px rgba(65,198,160,.34)}
+}
+@keyframes pulseLine{
+  0%,100%{opacity:.45;transform:scaleX(.8)}
+  50%{opacity:1;transform:scaleX(1)}
+}
+
+@media(max-width:600px){
+  .tabs{
+    top:6px;
+    margin:7px 6px 11px;
+    border-radius:18px;
+    padding:7px;
+    gap:6px;
+  }
+  .tab{
+    min-height:34px;
+    padding:8px 11px;
+    font-size:11px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .tabs::before,.tab.active,.tab.active::after{animation:none!important}
+  .tab{transition:none}
+}
+
+
+.tabs-shell{position:relative}
+.dock-orb{
+  position:absolute;
+  top:-4px;
+  right:18px;
+  width:74px;
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);
+  filter:blur(.25px);
+  opacity:.7;
+  z-index:60;
+  pointer-events:none;
+  animation:orbBlink 2.4s ease-in-out infinite;
+}
+@keyframes orbBlink{
+  0%,100%{opacity:.15;transform:scaleX(.6)}
+  50%{opacity:.95;transform:scaleX(1)}
+}
+
+
+/* Quality selector */
+.player-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.player-tools{display:flex;align-items:center;gap:6px}
+.quality-label{font-size:16px;opacity:.95}
+.quality-select{
+  appearance:none;
+  -webkit-appearance:none;
+  border:1px solid rgba(255,255,255,.55);
+  border-radius:999px;
+  padding:7px 28px 7px 11px;
+  color:#11594b;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.88),rgba(255,255,255,.62));
+  font-weight:800;
+  font-size:11px;
+  outline:none;
+  cursor:pointer;
+  box-shadow:0 3px 10px rgba(25,95,77,.12), inset 0 1px 0 rgba(255,255,255,.95);
+}
+.quality-select:disabled{opacity:.58;cursor:not-allowed}
+
+/* Favorite heart on channel cards */
+.channel{position:relative}
+.fav-btn{
+  position:absolute;
+  top:7px;
+  right:7px;
+  width:30px;
+  height:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(255,255,255,.85);
+  border-radius:50%;
+  background:rgba(255,255,255,.72);
+  color:#8a9a95;
+  font-size:17px;
+  line-height:1;
+  cursor:pointer;
+  z-index:5;
+  box-shadow:0 4px 12px rgba(28,105,86,.12), inset 0 1px 0 rgba(255,255,255,.92);
+  backdrop-filter:blur(12px) saturate(150%);
+  -webkit-backdrop-filter:blur(12px) saturate(150%);
+  transition:transform .18s ease, color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+.fav-btn:hover{
+  transform:scale(1.12);
+  color:#ef4f66;
+  background:rgba(255,255,255,.90);
+  box-shadow:0 7px 15px rgba(239,79,102,.18), 0 0 12px rgba(239,79,102,.12);
+}
+.fav-btn.active{
+  color:#ef3f59;
+  background:rgba(255,238,242,.88);
+  box-shadow:0 6px 16px rgba(239,63,89,.20),0 0 15px rgba(239,63,89,.18),inset 0 1px 0 rgba(255,255,255,.98);
+  animation:heartBeat 1.8s ease-in-out infinite;
+}
+@keyframes heartBeat{
+  0%,100%{transform:scale(1)}
+  10%{transform:scale(1.13)}
+  20%{transform:scale(1)}
+  30%{transform:scale(1.08)}
+  45%,100%{transform:scale(1)}
+}
+@media(max-width:600px){
+  .quality-select{font-size:10px;padding:6px 23px 6px 9px}
+  .quality-label{font-size:12px}
+  .fav-btn{width:27px;height:27px;font-size:15px;top:6px;right:6px}
+}
+@media(prefers-reduced-motion:reduce){
+  .fav-btn.active{animation:none}
+}
+
+@media(max-width:600px){
+  .date-dock{font-size:10px;gap:5px 7px;padding:7px 10px}
+}
+
+
+/* === Personal Lab status bar === */
+.status-footer{
+  width:100%;
+  margin-top:14px;
+  background:transparent;
+  border-radius:18px;
+  padding:0;
+  box-shadow:none;
+  display:block;
+}
+
+.status-footer::before{
+  content:"";
+  display:block;
+  height:1px;
+  margin:0 9% 5px;
+  background:linear-gradient(90deg,transparent,rgba(106,221,185,.42),transparent);
+  opacity:.75;
+}
+.status-bar{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:18px;
+  min-height:72px;
+  width:100%;
+  max-width:100%;
+  justify-content:center;
+  padding:10px 22px;
+  border:1px solid rgba(134,236,210,.34);
+  border-radius:18px;
+  overflow:hidden;
+  color:#e7f8ff;
+  background:
+    radial-gradient(circle at 16% 20%,rgba(102,223,185,.16),transparent 24%),
+    radial-gradient(circle at 86% 70%,rgba(55,181,145,.13),transparent 27%),
+    linear-gradient(100deg,#0b4f43 0%,#106b59 48%,#0d5d4e 100%);
+  box-shadow:
+    0 14px 36px rgba(2,51,67,.25),
+    inset 0 1px 0 rgba(255,255,255,.16),
+    inset 0 -1px 0 rgba(0,0,0,.16);
+  backdrop-filter:blur(22px) saturate(145%);
+  -webkit-backdrop-filter:blur(22px) saturate(145%);
+}
+
+.status-bar::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(115deg,
+      transparent 0%,
+      rgba(255,255,255,0) 32%,
+      rgba(255,255,255,.14) 48%,
+      rgba(255,255,255,.02) 54%,
+      transparent 69%);
+  transform:translateX(-60%);
+  animation:statusShine 8s ease-in-out infinite;
+}
+
+
+
+
+
+
+
+.status-date{
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:245px;
+}
+
+
+.status-date-copy{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  min-width:0;
+  font-family:"Avenir Next","SF Pro Display","Helvetica Neue",Arial,sans-serif;
+}
+
+.status-label{
+  font-size:13px;
+  line-height:1;
+  letter-spacing:1.1px;
+  color:#9fd8c8;
+  font-weight:800;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+
+.status-value{
+  font-size:25px;
+  line-height:.95;
+  color:#ffffff;
+  font-weight:900;
+  letter-spacing:.8px;
+  white-space:nowrap;
+  text-shadow:0 2px 12px rgba(91,221,178,.18);
+}
+
+.status-lunar{
+  display:inline-flex;
+  align-items:center;
+  width:max-content;
+  max-width:100%;
+  padding:3px 8px;
+  border:1px solid rgba(150,239,211,.18);
+  border-radius:999px;
+  background:rgba(255,255,255,.055);
+  color:#b7e8da;
+  font-size:9px;
+  line-height:1;
+  font-weight:800;
+  letter-spacing:.35px;
+  white-space:nowrap;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10);
+}
+
+.status-time{
+  position:relative;
+  z-index:2;
+  margin-left:0;
+  padding-left:20px;
+  border-left:1px solid rgba(136,235,207,.20);
+  font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  font-size:27px;
+  font-weight:900;
+  letter-spacing:1.8px;
+  color:#f7fdff;
+  text-shadow:0 0 14px rgba(111,229,194,.18);
+  white-space:nowrap;
+}
+
+.status-live{
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-left:0;
+  padding:8px 13px;
+  border:1px solid rgba(255,92,116,.56);
+  border-radius:999px;
+  background:rgba(255,70,95,.09);
+  color:#ff8095;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:1.7px;
+  box-shadow:
+    0 0 13px rgba(255,70,95,.10),
+    inset 0 1px 0 rgba(255,255,255,.10);
+}
+
+.status-live-dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#ff5c78;
+  box-shadow:0 0 8px rgba(255,92,120,.68);
+  animation:livePulse 1.4s ease-in-out infinite;
+}
+
+@keyframes statusShine{
+  0%,28%{transform:translateX(-60%)}
+  52%,68%{transform:translateX(60%)}
+  100%{transform:translateX(60%)}
+}
+
+
+@keyframes livePulse{
+  0%,100%{opacity:.55;transform:scale(.88)}
+  50%{opacity:1;transform:scale(1.12)}
+}
+
+@media(max-width:700px){
+  .status-bar{
+    min-height:70px;
+    width:100%;
+    max-width:100%;
+    gap:10px;
+    padding:9px 10px;
+    border-radius:16px;
+  }
+  .status-separator{margin:2px 10px}
+  .status-date{min-width:170px;gap:7px}
+  .status-label{font-size:10px}
+  .status-value{font-size:19px}
+  .status-lunar{font-size:8px}
+  .status-time{font-size:20px;letter-spacing:1.2px;padding-left:4px}
+  .status-live{margin-left:8px;padding:6px 9px;font-size:7px;letter-spacing:1.3px}
+}
+
+@media(max-width:540px){
+  .status-bar{
+    min-height:68px;
+    padding:10px 11px;
+  }
+  .status-date{min-width:0}
+  .status-brand-copy .status-kicker{display:none}
+  .status-date-copy .status-label{display:block;font-size:9px}
+  .status-value{font-size:17px}
+  .status-lunar{font-size:7px;padding:3px 6px}
+  .status-time{font-size:18px}
+  .status-live{padding:5px 7px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .status-bar::before,.status-dot,.status-live-dot{animation:none!important}
+}
+
+
 </style>
 </head>
 <body>
-<div class="wrap">
-<header>
-  <div class="brand"><div class="logo">▶</div><div><strong>SonTV</strong><small>LIVE TELEVISION</small></div></div>
-  <div class="m3u"><code id="m3uUrl">https://hoangcongson.github.io/siro.m3u</code><button class="btn" id="copyM3U">Copy M3U</button></div>
-</header>
-<section class="hero"><div class="eyebrow">// LIVE TV PLAYER</div><h1>Xem TV <span style="color:#4f96ff">trực tiếp</span></h1><p>Chọn kênh bên phải để phát trực tiếp từ playlist M3U của bạn.</p></section>
-<main class="tv">
-  <section class="player-card">
-    <div class="screen">
-      <video id="video" controls playsinline preload="metadata" crossorigin="anonymous"></video>
-      <div class="stream-error" id="streamError"><strong id="errorTitle">Không phát được kênh</strong><span id="errorText">Kiểm tra nguồn stream.</span><button class="btn" id="retry">↻ Thử lại</button></div>
-      <div class="empty" id="empty"><div class="empty-box"><div class="play">▶</div><strong>Chọn một kênh để xem</strong><span>Playlist M3U đang được tải...</span></div></div>
+<div class="container">
+<header class="header">
+  <div class="brand-wrap">
+    <div class="brand-icon">📺</div>
+    <div class="brand">
+      <div class="brand-name">HOÀNG CÔNG SƠN</div>
+      <div class="brand-sub">XEM TV ONLINE · TRUYỀN HÌNH TRỰC TUYẾN</div>
+      <div class="brand-glow"></div>
     </div>
-    <div class="now"><div><div class="now-name" id="nowName">Chưa chọn kênh</div><div class="status" id="status">Đang tải danh sách kênh…</div></div><span class="live"><i></i> LIVE</span></div>
-  </section>
-  <aside class="list-card">
-    <div class="list-head"><strong>Danh sách kênh</strong><span class="count" id="count">0 kênh</span></div>
-    <input class="search" id="search" type="search" placeholder="⌕  Tìm kênh..." autocomplete="off">
-    <div class="groups" id="groups"></div>
-    <div class="channels" id="channels"><div class="status" style="padding:12px">Đang tải playlist…</div></div>
-  </aside>
+  </div>
+  <div class="actions">
+    <a class="btn teal" href="https://hoangcongson.github.io/sontung/" target="_blank">⌂ GitHub</a>
+    <button class="btn" onclick="location.reload()">↻ Làm mới</button>
+  </div>
+</header>
+<div class="layout">
+<main class="player-card">
+<div class="player-head">
+  <span id="playerTitle">▶ Chọn một kênh để bắt đầu</span>
+  <div class="player-tools">
+    <label class="quality-label" for="qualitySelect">⚙️</label>
+    <select id="qualitySelect" class="quality-select" aria-label="Chất lượng phát">
+      <option value="-1">Tự động</option>
+    </select>
+  </div>
+</div>
+<div class="player-wrap"><video id="player" controls playsinline></video></div>
+<div class="now" id="hint">Chọn kênh bên dưới để phát. HLS hỗ trợ tốt trên Safari/iPhone.</div>
+<div class="tabs-shell"><div class="dock-orb" aria-hidden="true"></div><div class="tabs" id="tabs"></div></div>
+<section class="section"><div class="section-title">✨ CHỌN KÊNH TRUYỀN HÌNH</div><div class="channels" id="channels"></div></section>
 </main>
-<div class="bottom"><div class="source">Nguồn M3U: <a id="sourceLink" href="https://hoangcongson.github.io/siro.m3u" target="_blank">https://hoangcongson.github.io/siro.m3u</a></div><div class="actions"><button class="btn" id="openM3U">Mở M3U</button><button class="btn" id="reload">↻ Tải lại</button></div></div>
+<aside class="side"><div class="side-title">📚 DANH MỤC KÊNH</div><input id="search" class="search" placeholder="🔎 Tìm tất cả kênh..." autocomplete="off" oninput="renderChannels()"><div class="group-list" id="groups"></div></aside>
+</div>
+<footer class="footer status-footer" aria-label="Thông tin hệ thống">
+  <div class="status-bar">
+
+    <div class="status-date">
+      <div class="status-date-copy">
+        <span class="status-label" id="statusWeekday">Thứ hai</span>
+        <span class="status-value" id="solarDate">28/09/2026</span>
+        <span class="status-lunar" id="lunarDate">🌙 Âm lịch · 17/08/2026</span>
+      </div>
+    </div>
+
+    <div class="status-time" id="statusTime">15:20:51</div>
+
+    <div class="status-live">
+      <span class="status-live-dot"></span>
+      <span>LIVE</span>
+    </div>
+  </div>
+</footer>
 </div>
 <script>
-const M3U_URL='https://hoangcongson.github.io/siro.m3u';
-const video=document.getElementById('video'),channelsEl=document.getElementById('channels'),groupsEl=document.getElementById('groups'),search=document.getElementById('search'),count=document.getElementById('count'),empty=document.getElementById('empty'),nowName=document.getElementById('nowName'),statusEl=document.getElementById('status');
-let channels=[],active=-1,group='Tất cả',hls=null;
-function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function parse(text){const lines=text.replace(/\r/g,'').split('\n'),out=[];let meta=null;for(const raw of lines){const line=raw.trim();if(line.startsWith('#EXTINF:')){const name=(line.split(',').slice(1).join(',')||'Kênh').trim();const logo=(line.match(/tvg-logo=["']([^"']*)["']/i)||[])[1]||'';const g=(line.match(/group-title=["']([^"']*)["']/i)||[])[1]||'Khác';meta={name,logo,group:g}}else if(line&&!line.startsWith('#')&&meta){out.push({...meta,url:line});meta=null}}return out}
-function render(){const q=search.value.trim().toLowerCase();const visible=channels.map((c,i)=>({...c,i})).filter(c=>(group==='Tất cả'||c.group===group)&&((c.name+' '+c.group).toLowerCase().includes(q)));count.textContent=channels.length+' kênh';if(!visible.length){channelsEl.innerHTML='<div class="status" style="padding:12px">Không tìm thấy kênh.</div>';return}channelsEl.innerHTML=visible.map(c=>`<button class="channel ${c.i===active?'active':''}" data-i="${c.i}"><span class="icon">${c.logo?`<img src="${esc(c.logo)}" loading="lazy" onerror="this.style.display='none'">`:'TV'}</span><span style="min-width:0"><span class="channel-name">${esc(c.name)}</span><span class="channel-group">${esc(c.group)}</span></span></button>`).join('');channelsEl.querySelectorAll('.channel').forEach(b=>b.onclick=()=>play(+b.dataset.i))}
-function renderGroups(){const gs=['Tất cả',...new Set(channels.map(c=>c.group).filter(Boolean))];groupsEl.innerHTML=gs.map(g=>`<button class="group ${g===group?'active':''}">${esc(g)}</button>`).join('');groupsEl.querySelectorAll('.group').forEach(b=>b.onclick=()=>{group=b.textContent;renderGroups();render()})}
-function isHlsUrl(url){
-  return /\.m3u8(?:$|[?#])/i.test(url) || /(?:^|[?&])(format|type)=?(?:hls|m3u8)/i.test(url);
+const CHANNELS = (() => {
+  const base = [{"name":"VTV3","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vtv3/live247-hls-avc/vtv3-avc1_5600000=10000-mp4a_131600=20000.m3u8"},{"name":"VTV6","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vtv6/live247-hls-avc/vtv6-avc1_5600000=10000-mp4a_131600=20000.m3u8"},{"name":"VTV8 HD","group":"📺 VTV","logo":"https://i.imgur.com/tjA1fU8.png","url":"https://live.fptplay53.net/fnxhd1/vtv8hd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"VTV1","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vtv1/live247-hls-avc/vtv1-avc1_5600000=10000-mp4a_131600=20000.m3u8"},{"name":"VTV2","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vtv2/live247-hls-avc/vtv2-avc1_5600000=10000-mp4a_131600=20000.m3u8"},{"name":"VTV4","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vtv4/live247-hls-avc/vtv4-avc1_5600000=10000-mp4a_131600=20000.m3u8"},{"name":"Vietnam Today","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vietnamtoday/live-hls-avc/vietnamtoday-avc1_4000000=10000-mp4a_131600=20000.m3u8"},{"name":"VTV5","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vtv5/live247-hls-avc/vtv5-avc1_5600000=10000-mp4a_131600=20000.m3u8"},{"name":"VTV5 Tây Nam Bộ","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vtv5tnb/live-hls-avc/vtv5tnb-avc1_4000000=10000-mp4a_131600=20000.m3u8"},{"name":"VTV5 Tây Nguyên","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vtv5tn/live-hls-avc/vtv5tn-avc1_4000000=10000-mp4a_131600=20000.m3u8"},{"name":"VTV7","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vtv7/live247-hls-avc/vtv7-avc1_5600000=10000-mp4a_131600=20000.m3u8"},{"name":"VTV8","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vtv8/live-hls-avc/vtv8-avc1_4000000=10000-mp4a_131600=20000.m3u8"},{"name":"VTV9","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vtv9/live247-hls-avc/vtv9-avc1_5600000=10000-mp4a_131600=20000.m3u8"},{"name":"VTV10","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vtv10/live247-hls-avc/vtv10-avc1_5600000=10000-mp4a_131600=20000.m3u8"},{"name":"VTV1 HD","group":"📺 VTV","logo":"","url":"https://live.fptplay53.net/live/media/vtv1/live247-hls-avc/vtv1-avc1_5600000=10000-mp4a_131600=20000.m3u8"},{"name":"VTV3 HD","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vtv3/live247-hls-avc/vtv3-avc1_5600000=10000-mp4a_140800_vie=20000.m3u8"},{"name":"VTV4 HD","group":"📺 VTV","logo":"","url":"https://live.fptplay53.net/live/media/vtv4/live247-hls-avc/vtv4-avc1_5600000=10000-mp4a_131600=20000.m3u8"},{"name":"VTV5 HD","group":"📺 VTV","logo":"","url":"https://live.fptplay53.net/live/media/vtv5/live247-hls-avc/vtv5-avc1_5600000=10000-mp4a_131600=20000.m3u8"},{"name":"VTV6 HD","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vtv6/live247-hls-avc/vtv6-avc1_5600000=10000-mp4a_140800_vie=20000.m3u8"},{"name":"VTV7 HD","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vtv7/live247-hls-avc/vtv7-avc1_5600000=10000-mp4a_140800_vie=20000.m3u8"},{"name":"VTV9 HD","group":"📺 VTV","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vtv9/live247-hls-avc/vtv9-avc1_5600000=10000-mp4a_140800_vie=20000.m3u8"},{"name":"VTV5 HD - Tây Nam Bộ","group":"📺 VTV","logo":"","url":"https://live.fptplay53.net/live/media/vtv5tnb/live-hls-avc/vtv5tnb-avc1_4000000=10000-mp4a_131600=20000.m3u8"},{"name":"VTV5 HD - Tây Nguyên","group":"📺 VTV","logo":"","url":"https://live.fptplay53.net/live/media/vtv5tn/live-hls-avc/vtv5tn-avc1_4000000=10000-mp4a_131600=20000.m3u8"},{"name":"HBO","group":"❤️ YÊU THÍCH","logo":"","url":"https://s2129134.cdn.mytvnet.vn/pkg20/live_dzones/hbo.smil/manifest.mpd"},{"name":"Cinemax HD","group":"❤️ YÊU THÍCH","logo":"","url":"https://s2129134.cdn.mytvnet.vn/pkg20/live_dzones/max.smil/manifest.mpd"},{"name":"Cinema World","group":"❤️ YÊU THÍCH","logo":"","url":"https://s2129134.cdn.mytvnet.vn/pkg20/live_dzones/cinemaworld.smil/manifest.mpd"},{"name":"Box Movie 1","group":"❤️ YÊU THÍCH","logo":"","url":"https://livevlisctcdnw.seenow.vn/Live_DASHDRM1/BM1/manifest.mpd"},{"name":"Hollywood Classics","group":"❤️ YÊU THÍCH","logo":"","url":"https://livevlisctcdnw.seenow.vn/Live_DASHDRM1/HC/manifest.mpd"},{"name":"Box Hits","group":"❤️ YÊU THÍCH","logo":"","url":"https://livevlisctcdnw.seenow.vn/mean/BOXHIT/manifest.mpd"},{"name":"Warner TV","group":"❤️ YÊU THÍCH","logo":"","url":"https://s2129134.cdn.mytvnet.vn/pkg20/live_dzones/wtv.smil/manifest.mpd"},{"name":"KIX HD","group":"❤️ YÊU THÍCH","logo":"","url":"https://live.fptplay53.net/fnxhd2/kixhd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"Animal Planet","group":"❤️ YÊU THÍCH","logo":"","url":"https://s2129134.cdn.mytvnet.vn/pkg20/live_dzones/ap.smil/manifest.mpd"},{"name":"Discovery","group":"❤️ YÊU THÍCH","logo":"","url":"https://s7770.cdn.mytvnet.vn/pkg20/live_dzones/dsc.smil/manifest.mpd"},{"name":"Discovery Asia","group":"❤️ YÊU THÍCH","logo":"","url":"https://s2129134.cdn.mytvnet.vn/pkg20/live_dzones/dscasia.smil/manifest.mpd"},{"name":"AXN HD","group":"❤️ YÊU THÍCH","logo":"","url":"https://s7771.cdn.mytvnet.vn/pkg20/live_dzones/axn.smil/manifest.mpd"},{"name":"DMAX","group":"❤️ YÊU THÍCH","logo":"","url":"https://s2129134.cdn.mytvnet.vn/pkg20/live_dzones/dmax.smil/manifest.mpd"},{"name":"BBC Earth","group":"❤️ YÊU THÍCH","logo":"","url":"https://s7771.cdn.mytvnet.vn/pkg20/live_dzones/bbcearth.smil/manifest.mpd"},{"name":"TVB VIỆT NAM","group":"❤️ YÊU THÍCH","logo":"","url":"https://amg01868-amg01868c3-tvbanywhere-us-4491.playouts.now.amagi.tv/playlist1080p.m3u8"},{"name":"FASHION TV HD","group":"❤️ YÊU THÍCH","logo":"","url":"http://stream8.cinerama.uz/1053/tracks-v1a1/mono.m3u8"},{"name":"FightBox","group":"❤️ YÊU THÍCH","logo":"","url":"https://dash.antik.sk/live/test_fightbox_medium_atk/playlist.m3u8"},{"name":"MMA-TV.com","group":"❤️ YÊU THÍCH","logo":"","url":"http://fs.uplink.kz/mma/mono.m3u8?token=onlinetv"},{"name":"History HD","group":"❤️ YÊU THÍCH","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=9856"},{"name":"OUTDOOR CHANNEL HD","group":"❤️ YÊU THÍCH","logo":"https://i.imgur.com/VO7PRty.png","url":"https://live.fptplay53.net/epzhd2/outdoorfhd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"Cartoon Network HD","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://s2129134.cdn.mytvnet.vn/pkg20/live_dzones/cn.smil/manifest.mpd"},{"name":"Cartoonito","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://s2129134.cdn.mytvnet.vn/pkg20/live_dzones/boomerang.smil/manifest.mpd"},{"name":"Asian Food Network","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://live.fptplay53.net/fnxhd2/afchd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"BabyTV","group":"🌐 QUỐC TẾ VIP","logo":"","url":"http://line.watchtivo-8k.com:80/play/live.php?mac=00:1A:79:3F:0C:96&stream=960054&extension=ts&play_token=qpvBSWKfyz"},{"name":"Dreamworks","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://s2129134.cdn.mytvnet.vn/pkg20/live_dzones/dreamwork.smil/manifest.mpd"},{"name":"BBC Lifestyle","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://s7770.cdn.mytvnet.vn/pkg20/live_dzones/bbclifestyle.smil/manifest.mpd"},{"name":"BBC Cbeebies","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://s2129134.cdn.mytvnet.vn/pkg20/live_dzones/cbb.smil/manifest.mpd"},{"name":"BBC World News","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://s7771.cdn.mytvnet.vn/pkg20/live_dzones/bbcworldnews.smil/manifest.mpd"},{"name":"Arirang","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://live.fptplay53.net/fnxhd1/airanghd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"Bloomberg","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://s2129134.cdn.mytvnet.vn/pkg20/live_dzones/bloomberg.smil/manifest.mpd"},{"name":"CNBC","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://live.fptplay53.net/fnxhd1/cnbchd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"CNN","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://s7771.cdn.mytvnet.vn/pkg20/live_dzones/cnn.smil/manifest.mpd"},{"name":"CNA","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=112"},{"name":"CGTN","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://english-livebkali.cgtn.com/live/encgtn_0.m3u8"},{"name":"CGTN Documentary","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://english-livebkali.cgtn.com/live/doccgtn_0.m3u8"},{"name":"TV5Monde","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=9852"},{"name":"DW","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=109"},{"name":"Da Vinci HD","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://live.fptplay53.net/fnxhd2/davincihd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"France 24","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://live.france24.com/hls/live/2037218/F24_EN_HI_HLS/master_5000.m3u8"},{"name":"KBS World","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=213"},{"name":"NHK World","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://live.fptplay53.net/fnxhd2/nhkworld_vhls.smil/chunklist_b5000000.m3u8"},{"name":"Al Jazeera English","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://live-hls-web-aje-gcp.thehlive.com/AJE/01.m3u8"},{"name":"TRT World","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://tv-trtworld.medya.trt.com.tr/master_1080.m3u8"},{"name":"Fashion TV","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://s2129134.cdn.mytvnet.vn/pkg20/live_dzones/ftv.smil/manifest.mpd"},{"name":"TLC","group":"🌐 QUỐC TẾ VIP","logo":"","url":"https://s129135.cdn.mytvnet.vn/pkg20/live_dzones/tlc.smil/manifest.mpd"},{"name":"Filmbox","group":"🌐 QUỐC TẾ VIP","logo":"","url":"http://line.watchtivo-8k.com:80/play/live.php?mac=00:1A:79:3F:0C:96&stream=1084668&extension=ts&play_token=onuPSPIV6o"},{"name":"Music Box","group":"📦 IN THE BOX","logo":"","url":"https://livevlisctcdnw.seenow.vn/livesnv2/MUSICBOX/manifest.mpd"},{"name":"Woman","group":"📦 IN THE BOX","logo":"","url":"https://livevlisctcdnw.seenow.vn/Live_DASHDRM1/WO/manifest.mpd"},{"name":"HTV1 - Đài PTTH Thành Phố Hồ Chí Minh","group":"🔴 HTV • HTVC","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=190"},{"name":"HTV2 - Vie Channel","group":"🔴 HTV • HTVC","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=191"},{"name":"HTV3 - Đài PTTH Thành Phố Hồ Chí Minh","group":"🔴 HTV • HTVC","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=192"},{"name":"HTV4 - Đài PTTH Thành Phố Hồ Chí Minh","group":"🔴 HTV • HTVC","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=9"},{"name":"HTV5 - B Channel","group":"🔴 HTV • HTVC","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=151"},{"name":"HTV7 - Đài PTTH Thành Phố Hồ Chí Minh","group":"🔴 HTV • HTVC","logo":"","url":"https://live.fptplay53.net/live/media/htv7/live247-hls-avc/htv7-avc1_5600000=10000-mp4a_131600=20000.m3u8"},{"name":"HTV9 - Đài PTTH Thành Phố Hồ Chí Minh","group":"🔴 HTV • HTVC","logo":"","url":"https://live-a.fptplay53.net/live/media/htv9/live247-hls-avc/htv9-avc1_5600000=10000-mp4a_131600=20000.m3u8"},{"name":"HTV Thể Thao","group":"🔴 HTV • HTVC","logo":"","url":"https://live.fptplay53.net/live/media/htvthethao/live247-hls-avc/htvthethao-avc1_5600000=10000-mp4a_131600=20000.m3u8"},{"name":"HTVC Plus HD","group":"🔴 HTV • HTVC","logo":"","url":"https://live.fptplay53.net/epzhd1/htvcplus_vhls.smil/chunklist_b5000000.m3u8"},{"name":"HTV1","group":"🔴 HTV • HTVC","logo":"","url":"https://live.fptplay53.net/epzhd1/htv1_hls.smil/chunklist_b2500000.m3u8"},{"name":"HTV2 HD","group":"🔴 HTV • HTVC","logo":"","url":"https://live.fptplay53.net/epzhd1/htv2hd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"HTV3","group":"🔴 HTV • HTVC","logo":"","url":"https://live.fptplay53.net/epzhd1/htv3_hls.smil/chunklist_b2500000.m3u8"},{"name":"HTV Key","group":"🔴 HTV • HTVC","logo":"","url":"https://live.fptplay53.net/epzhd1/htv4_hls.smil/chunklist_b2500000.m3u8"},{"name":"HTV7 HD","group":"🔴 HTV • HTVC","logo":"https://i.imgur.com/n2PEK28.png","url":"https://live.fptplay53.net/epzhd1/htv7hd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"HTV9 HD","group":"🔴 HTV • HTVC","logo":"https://i.imgur.com/6GSN524.png","url":"https://live.fptplay53.net/epzhd1/htv9hd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"HTV THỂ THAO HD","group":"🔴 HTV • HTVC","logo":"https://i.imgur.com/ikaiET3.png","url":"https://live.fptplay53.net/epzhd1/htvcthethao_vhls.smil/chunklist_b5000000.m3u8"},{"name":"HTVC Thuần Việt","group":"🔴 HTV • HTVC","logo":"","url":"https://live.fptplay53.net/epzhd1/htvcthuanviethd_vhls.smil/chunklist.m3u8"},{"name":"HTVC Du Lịch HD","group":"🔴 HTV • HTVC","logo":"","url":"https://live.fptplay53.net/epzhd1/htvcdulich_vhls.smil/chunklist_b5000000.m3u8"},{"name":"HTVC Ca nhạc HD","group":"🔴 HTV • HTVC","logo":"","url":"https://live.fptplay53.net/epzhd1/htvcmusic_vhls.smil/chunklist.m3u8"},{"name":"HTVC PHIM HD","group":"🔴 HTV • HTVC","logo":"https://i.imgur.com/P0wqvmu.png","url":"https://live.fptplay53.net/epzhd1/htvcmovieshd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"HTVC Gia đình HD","group":"🔴 HTV • HTVC","logo":"","url":"https://live.fptplay53.net/epzhd1/htvcgiadinh_vhls.smil/chunklist.m3u8"},{"name":"HTVC Phụ nữ HD","group":"🔴 HTV • HTVC","logo":"","url":"https://live.fptplay53.net/epzhd1/htvcphunu_vhls.smil/chunklist.m3u8"},{"name":"HTV5 HD","group":"🔴 HTV • HTVC","logo":"https://i.imgur.com/EI0mJRf.png","url":"https://live.fptplay53.net/fnxsd1/btv9_hls.smil/chunklist_b2500000.m3u8"},{"name":"HTVC THUẦN VIỆT HD","group":"🔴 HTV • HTVC","logo":"https://i.imgur.com/KtMeo6q.png","url":"https://live.fptplay53.net/epzhd1/htvcthuanviethd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"SCTV2 - TODAY TV","group":"📺 SCTV","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=201"},{"name":"SCTV6","group":"📺 SCTV","logo":"","url":"https://live.fptplay53.net/epzhd2/film360_vhls.smil/chunklist_b5000000.m3u8"},{"name":"SCTV15","group":"📺 SCTV","logo":"","url":"https://liveatmvng.vtvprime.vn/live/data8/SCTV15HD/Live_DASHDRM/SCTV15HD.mpd"},{"name":"SCTV17","group":"📺 SCTV","logo":"","url":"https://liveatmvng.vtvprime.vn/live/data8/SCTV17/Live_DASHDRM/SCTV17.mpd"},{"name":"SCTV22","group":"📺 SCTV","logo":"","url":"https://liveatmvng.vtvprime.vn/live/data8/SCTV22/Live_DASHDRM/SCTV22.mpd"},{"name":"SCTV4K","group":"📺 SCTV","logo":"","url":"https://vietanhtv.id.vn/sctv/sctv-4k/index.m3u8"},{"name":"ON Vie Giải Trí","group":"📡 VTVcab","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=180"},{"name":"On Movies - You TV","group":"📡 VTVcab","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=181"},{"name":"ON E- Channel","group":"📡 VTVcab","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=182"},{"name":"On O2TV","group":"📡 VTVcab","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=136"},{"name":"On BiBi","group":"📡 VTVcab","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=178"},{"name":"ON Cine","group":"📡 VTVcab","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=176"},{"name":"ON Style TV","group":"📡 VTVcab","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=184"},{"name":"On Music","group":"📡 VTVcab","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=185"},{"name":"ON Vie Dramas","group":"📡 VTVcab","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=177"},{"name":"ON V Family","group":"📡 VTVcab","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=187"},{"name":"On Kids","group":"📡 VTVcab","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=179"},{"name":"On Life","group":"📡 VTVcab","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=188"},{"name":"DRT HD - Báo và PTTH Đắk Lắk","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=51"},{"name":"THP HD - Báo và PTTH Hải Phòng","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.fptplay53.net/live/media/haiphong/live-hls-avc/haiphong-avc1_4000000=10000-mp4a_131600=20000.m3u8"},{"name":"THP3 - Báo và PTTH Hải Phòng","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=59"},{"name":"Cần Thơ 1 HD - Báo và PTTH Thành Phố Cần Thơ","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.canthotv.vn/live/tv/chunklist_w693005420.m3u8"},{"name":"Cần Thơ 2 HD - Báo và PTTH Thành Phố Cần Thơ","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.canthotv.vn/cs2/live.stream/chunklist_w1497265452.m3u8"},{"name":"Cần Thơ 3 HD - Báo và PTTH Thành Phố Cần Thơ","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.canthotv.vn/cs3/tv/chunklist_w1003748170.m3u8"},{"name":"STV HD - Báo và PTTH Sơn La","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://cdn.sonlatv.vn/live/28595222e707a364251b8724717894baa46/chunklist.m3u8"},{"name":"ĐNNRTV1 - Báo và PTTH Đồng Nai","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=53"},{"name":"ĐNNRTV2 - Báo và PTTH Đồng Nai","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=255"},{"name":"ĐNNRTV3 - Báo và PTTH Đồng Nai","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://tv.vietanhtv.top/vieon/vieon.php?id=dong-nai-3"},{"name":"H1 - Báo và PTTH Hà Nội","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.fptplay53.net/fnxhd2/hanoitv1_vhls.smil/chunklist_b5000000.m3u8"},{"name":"H2 - Báo và PTTH Hà Nội","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.fptplay53.net/fnxhd1/hntv2_vhls.smil/chunklist_b5000000.m3u8"},{"name":"TTV HD - Báo và PTTH Thanh Hóa","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=89"},{"name":"QTV1 HD - Báo và PTTH Thành Phố Quảng Ninh","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.baoquangninh.vn/qtvlive/tv1live.m3u8"},{"name":"QTV3 HD - Báo và PTTH Thành Phố Quảng Ninh","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.baoquangninh.vn/qtvlive/tv3live.m3u8"},{"name":"THVL1 - Báo và PTTH Vĩnh Long","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.fptplay53.net/live/media/vinhlong1/live247-hls-avc/vinhlong1-avc1_3800000=10000-mp4a_131600=20000.m3u8"},{"name":"THVL2 - Báo và PTTH Vĩnh Long","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.fptplay53.net/live/media/vinhlong2/live247-hls-avc/vinhlong2-avc1_3800000=10000-mp4a_131600=20000.m3u8"},{"name":"THVL3 - Báo và PTTH Vĩnh Long","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://vips-livecdn.fptplay.net/live/media/vinhlong3/live247-hls-avc/vinhlong3-avc1_5600000=10000-mp4a_131600=20000.m3u8"},{"name":"THVL4 - Báo và PTTH Vĩnh Long","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.fptplay53.net/epzhd2/vinhlong4-hd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"THVL5 - Báo và PTTH Vĩnh Long","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.fptplay53.net/epzhd2/vinhlong5hd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"ATV2 | Báo và PTTH An Giang","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.fptplay53.net/epzhd2/angiang02hd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"NBTV - Báo và PTTH Ninh Bình","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.mediatech.vn/live/28597f8fd7ea5064d0f84ab00b3699dfd86/chunklist.m3u8"},{"name":"NTV - Báo và PTTH Nghệ An","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=74"},{"name":"CTV HD - Báo và PTTH Cà Mau","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.fptplay53.net/epzhd2/camauhd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"Tây Ninh TV - Báo và PTTH Tây Ninh","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=72"},{"name":"THĐT1 HD - Báo và PTTH Đồng Tháp","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.fptplay53.net/epzhd2/dongthap01_vhls.smil/chunklist_b5000000.m3u8"},{"name":"THĐT2 - Báo và PTTH Đồng Tháp","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.fptplay53.net/epzhd2/mientaythdt02_vhls.smil/chunklist_b5000000.m3u8"},{"name":"LTV2 HD - Báo và PTTH Lâm Đồng","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=45"},{"name":"ĐNRT1 - Báo và PTTH Đà Nẵng","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=49"},{"name":"ĐNRT2 - Báo và PTTH Đà Nẵng","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=80"},{"name":"ATV1 - Báo và PTTH An Giang","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=66"},{"name":"ATV3 - Báo và PTTH An Giang","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://live.fptplay53.net/epzsd1/angiang03_hls.smil/chunklist_b2500000.m3u8"},{"name":"LSTV HD - Báo và PTTH Lạng Sơn","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://stream.langsontv.vn/live/285c78da0c246524c90917842f8de03bd21/chunklist.m3u8"},{"name":"QTTV - Báo và PTTH Quảng Trị","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=83"},{"name":"BHTTV - Báo và PTTH Hà Tĩnh","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=58"},{"name":"CRTV HD - Báo Cao Bằng","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=48"},{"name":"LTV - Báo Lai Châu","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=68"},{"name":"QNgTV1 - Báo và PTTH Quảng Ngãi","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=81"},{"name":"QNgTV2 - Báo và PTTH Quảng Ngãi","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://tv.vietanhtv.top/vieon/vieon.php?id=kon-tum-1"},{"name":"TN - Báo và PTTH Thái Nguyên","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=88"},{"name":"ĐTV HD - Báo Điện Biên Phủ","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=52"},{"name":"THLC HD - Báo và PTTH Lào Cai","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=71"},{"name":"LTV1 HD - Báo và PTTH Lâm Đồng","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=69"},{"name":"YouTV","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://freem3u.xyz/api/live/play.m3u8?vid=31"},{"name":"TH VĨNH LONG 1 HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/q3fjpYc.png","url":"https://live.fptplay53.net/epzhd2/vinhlong1_vhls.smil/chunklist_b5000000.m3u8"},{"name":"TH VĨNH LONG 2 HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/zGv54Ed.png","url":"https://live.fptplay53.net/epzhd2/vinhlong2_vhls.smil/chunklist_b5000000.m3u8"},{"name":"TH VĨNH LONG 3 HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/44c1Yoz.png","url":"https://live.fptplay53.net/epzhd2/vinhlong3_vhls.smil/chunklist_b5000000.m3u8"},{"name":"ATV1 - TH AN GIANG 1 HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/mgp6RAU.png","url":"https://live.fptplay53.net/epzsd1/angiang01_hls.smil/chunklist_b2500000.m3u8"},{"name":"TH CẦN THƠ 1 HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/F5OhQVa.png","url":"https://live.fptplay53.net/epzhd2/cantho01_vhls.smil/chunklist_b2500000.m3u8"},{"name":"TH CẦN THƠ 3 HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/7FA1I1d.png","url":"https://live.fptplay53.net/epzsd1/cantho03_hls.smil/chunklist_b2500000.m3u8"},{"name":"ĐNNRTV1 - TH ĐỒNG NAI 1 HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.postimg.cc/HJN6GzyV/DN1.png","url":"https://live.fptplay53.net/epzsd1/dongnai1_hls.smil/chunklist_b2500000.m3u8"},{"name":"ĐNNRTV2 - TH ĐỒNG NAI 2 HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.postimg.cc/Mf75Q8r8/DN2.png","url":"https://live.fptplay53.net/epzsd1/dongnai2_hls.smil/chunklist_b2500000.m3u8"},{"name":"LTV1 - TH LÂM ĐỒNG 1 HD","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://cloudstreamthdn.tek4tv.vn/live/smil:daknong.smil/playlist.m3u8"},{"name":"LTV2 - TH LÂM ĐỒNG 2 HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.postimg.cc/n99zRFfP/LD2.png","url":"https://live.fptplay53.net/epzsd1/lamdong02_hls.smil/chunklist_b2500000.m3u8"},{"name":"TN - TH TÂY NINH HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/HFm3hbC.png","url":"https://live.fptplay53.net/epzsd1/tayninh01_hls.smil/chunklist_b2500000.m3u8"},{"name":"ĐNRT1 - TH TP. ĐÀ NẴNG 1 HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.postimg.cc/8jwBQ42q/dnrt1.png","url":"https://live.fptplay53.net/epzsd1/danang1_hls.smil/chunklist_b2500000.m3u8"},{"name":"ĐNRT2 - TH TP. ĐÀ NẴNG 2 HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.postimg.cc/870Rs5Pm/dnrt2.png","url":"https://live.fptplay53.net/epzsd1/danang2_hls.smil/chunklist_b2500000.m3u8"},{"name":"DRT - TH ĐẮK LẮK HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/7CQqMeh.png","url":"https://live.fptplay53.net/epzsd1/daklak_hls.smil/chunklist_b2500000.m3u8"},{"name":"GTV - TH GIA LAI HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.postimg.cc/grHBjV9t/Gialai.png","url":"https://live.fptplay53.net/epzsd1/gialai01_hls.smil/chunklist_b2500000.m3u8"},{"name":"BHT TV - TH HÀ TĨNH HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/sESKlNO.png","url":"https://live.fptplay53.net/fnxsd1/hatinh_hls.smil/chunklist_b2500000.m3u8"},{"name":"HueTV - TH TP. HUẾ HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/bVWyWC7.png","url":"https://live.fptplay53.net/epzsd1/hue_hls.smil/chunklist_b2500000.m3u8"},{"name":"KTV - TH KHÁNH HÒA HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.postimg.cc/2qn7JYr6/KH.png","url":"https://live.fptplay53.net/epzsd1/khanhhoa_hls.smil/chunklist_b2500000.m3u8"},{"name":"KTV1 - TH KHÁNH HÒA 1 HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.postimg.cc/14vcbJhC/KH1.png","url":"https://live.fptplay53.net/epzsd1/khanhhoa01_hls.smil/chunklist_b2500000.m3u8"},{"name":"NTV - TH NGHỆ AN HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/FLvFSLS.png","url":"https://live.fptplay53.net/fnxsd1/nghean_hls.smil/chunklist_b2500000.m3u8"},{"name":"QNgTV1 - TH QUẢNG NGÃI HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.postimg.cc/pdnCmw7y/QNg-TV1.png","url":"https://live.fptplay53.net/epzsd1/quangngai_hls.smil/chunklist_b2500000.m3u8"},{"name":"QNgTV2 - TH QUẢNG NGÃI 2 HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.postimg.cc/0j90HbNC/QNg-TV2.png","url":"https://live.fptplay53.net/epzsd1/quangngai01_hls.smil/chunklist_b2500000.m3u8"},{"name":"QTTV - TH QUẢNG TRỊ HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/6qOelwt.png","url":"https://live.fptplay53.net/epzsd1/quangtri_hls.smil/chunklist_b2500000.m3u8"},{"name":"TTV - TH THANH HOÁ HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/UwTCbZ5.png","url":"https://live.fptplay53.net/fnxsd1/thanhhoa_hls.smil/chunklist_b2500000.m3u8"},{"name":"BTV - TH BẮC NINH HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.postimg.cc/BjpqCL1S/BNTV.png","url":"https://live.fptplay53.net/fnxsd1/bacninh01_hls.smil/chunklist_b2500000.m3u8"},{"name":"CRTV - TH CAO BẰNG HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/RUJmK5D.png","url":"https://live.fptplay53.net/fnxsd1/caobang_hls.smil/chunklist_b2500000.m3u8"},{"name":"ĐTV - TH ĐIỆN BIÊN HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/hMDRDxN.png","url":"https://live.fptplay53.net/fnxsd1/dienbien_hls.smil/chunklist_b2500000.m3u8"},{"name":"THP - TH TP. HẢI PHÒNG HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/iq9JLb9.png","url":"https://live.fptplay53.net/fnxsd1/haiphong_hls.smil/chunklist_b2500000.m3u8"},{"name":"THP3 - TH TP. HẢI PHÒNG 3 HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/FEvJhRf.png","url":"https://live.fptplay53.net/fnxsd1/haiphongplus_hls.smil/chunklist_b2500000.m3u8"},{"name":"HYTV - TH HƯNG YÊN HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/fakTCLE.png","url":"https://live.fptplay53.net/fnxsd1/hungyen_2000.stream/chunklist_b2500000.m3u8"},{"name":"LTV - TH LAI CHÂU HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/n02cvKQ.png","url":"https://live.fptplay53.net/fnxsd1/laichau_hls.smil/chunklist_b2500000.m3u8"},{"name":"LSTV - TH LẠNG SƠN HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/yxz02UD.png","url":"https://live.fptplay53.net/fnxsd1/langson_hls.smil/chunklist_b2500000.m3u8"},{"name":"THLC - TH LÀO CAI HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/Vd0P0rx.png","url":"https://live.fptplay53.net/fnxsd1/laocai_hls.smil/chunklist_b2500000.m3u8"},{"name":"NBTV - TH NINH BÌNH HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/qHQTwJ9.png","url":"https://live.fptplay53.net/fnxsd1/ninhbinh_hls.smil/chunklist_b2500000.m3u8"},{"name":"PTV - TH PHÚ THỌ HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/LXuRwJY.png","url":"https://live.fptplay53.net/fnxsd1/phutho_hls.smil/chunklist_b2500000.m3u8"},{"name":"QTV1 - TH QUẢNG NINH 1 HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/KVia0uU.png","url":"https://live.fptplay53.net/fnxsd1/quangninh1_hls.smil/chunklist_b2500000.m3u8"},{"name":"QTV3 - TH QUẢNG NINH 3 HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/AheAmMj.png","url":"https://live.fptplay53.net/fnxsd1/quangninh3_hls.smil/chunklist_b2500000.m3u8"},{"name":"SNews - TH SƠN LA HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.postimg.cc/3JnLC20C/Snews.png","url":"https://live.fptplay53.net/fnxsd1/sonla_hls.smil/chunklist_b2500000.m3u8"},{"name":"TN - TH THÁI NGUYÊN HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/P3pbab8.png","url":"https://live.fptplay53.net/fnxsd1/thainguyen_hls.smil/chunklist_b2500000.m3u8"},{"name":"TTV - TH TUYÊN QUANG HD","group":"📍 ĐỊA PHƯƠNG","logo":"https://i.imgur.com/Pfq3ix9.png","url":"https://live.fptplay53.net/fnxsd1/tuyenquang_hls.smil/chunklist_b2500000.m3u8"},{"name":"NEI MONGGOL TV","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://cdn4.skygo.mn/live/disk1/NeigMGL/HLSv3-FTA/NeigMGL.m3u8"},{"name":"7 канал (Красноярск)","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://7channel.iptv2022.com/tracks-v5a1/mono.m3u8"},{"name":"OVAA TV","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://vod.tuva.ru/ovaa/tracks-v1a1/mono.m3u8"},{"name":"АИСТ ТВ","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://live2-aisttv.cdnvideo.ru/aisttv2/aisttv.sdp/playlist.m3u8"},{"name":"БСТ","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://bsttv.bonus-tv.ru/cdn/bst/playlist_sdhigh.m3u8"},{"name":"БСТ 24","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://bst.bratsk.ru/hls/bst2/sd/stream.m3u8"},{"name":"Енисей","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://hls-eniseytv.cdnvideo.ru/eniseytv/stream1/playlist.m3u8"},{"name":"Курай ТВ","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://bsttv.bonus-tv.ru/cdn/kurai/playlist.m3u8"},{"name":"Лен ТВ 24","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://stream.smotrim.ru/hls/lentv24/playlist_5.m3u8"},{"name":"НТС Иркутск","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://air.nts-tv.ru/fhd.m3u8"},{"name":"Москва. Доверие","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://stream.smotrim.ru/hls/doverie/playlist_3.m3u8"},{"name":"ОРТРК 12 канал","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://gtrkomsk-live.cdnvideo.ru/gtrkomsk/gtrkomsk.smil/tracks-v1a1/mono.m3u8"},{"name":"ОТВ Екатеринбург","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://vd.obltv.ru/watch/air_sd.m3u8"},{"name":"ОТС","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://tele2dvrnat01-02.cdnvideo.ru/stream/NAT_OTC_ap1f55f482a2df2bede07c661806c4eb/hls/1920x1080@4504/playlist.m3u8"},{"name":"Санкт-Петербург","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://stream.smotrim.ru/hls/ext_spbtv/playlist_5.m3u8"},{"name":"Первый Псковский","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://live-3.otcnet.ru/pskov/tracks-v1a1/mono.m3u8"},{"name":"Прима","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://tele2dvrnat01-02.cdnvideo.ru/stream/NAT_Prima/hls/1920x1080@4504/playlist.m3u8"},{"name":"РТС Абакан","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://95.47.155.244:8001/play/a022"},{"name":"ТВ-7","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"https://ctv7.ru/live/index.m3u8"},{"name":"Тивиком","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://stream.trafjam.ru/tvcom/studio/tracks-v1a1/rewind-43200.m3u8"},{"name":"Тува 24","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://vod.tuva.ru/tuva24/tracks-v1a1/mono.m3u8"},{"name":"Волга","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://tele2dvrnat01-02.cdnvideo.ru/stream/NAT_Volga/hls/1920x1080@4504/playlist.m3u8"},{"name":"Четвёртый канал","group":"📍 ĐỊA PHƯƠNG","logo":"","url":"http://tele2dvrnat01-02.cdnvideo.ru/stream/NAT_EKB1/hls/1024x576@2024/playlist.m3u8"},{"name":"Đèn Âm Hồn: Người Con Gái Nam Xương","group":"🎟️ SỰ KIỆN","logo":"","url":"https://s6.kkphimplayer6.com/20250811/miyJKDrj/3500kb/hls/index.m3u8"},{"name":"Làm Giàu Với Ma (Betting With Ghost)","group":"🎟️ SỰ KIỆN","logo":"","url":"https://s4.phim1280.tv/20250323/KmdatGKe/3000kb/hls/index.m3u8"},{"name":"Doraemon Movie 44: Nobita và cuộc phiêu lưu vào thế giới trong tranh (bản lồng tiếng)","group":"🎟️ SỰ KIỆN","logo":"","url":"https://s6.kkphimplayer6.com/20250827/JfkCJsGc/3500kb/hls/index.m3u8"},{"name":"Ngày Xưa Có Một Chuyện Tình","group":"🎟️ SỰ KIỆN","logo":"","url":"https://s6.kkphimplayer6.com/20250901/w8LN0LND/3500kb/hls/index.m3u8"},{"name":"Bộ Tứ Báo Thủ","group":"🎟️ SỰ KIỆN","logo":"","url":"https://s6.kkphimplayer6.com/20250901/2RZvePPZ/3500kb/hls/index.m3u8"},{"name":"Mưa Trên Cánh Bướm","group":"🎟️ SỰ KIỆN","logo":"","url":"https://s6.kkphimplayer6.com/20250918/48nrktLm/3500kb/hls/index.m3u8"},{"name":"Thám Tử Kiên: Kỳ Án Không Đầu","group":"🎟️ SỰ KIỆN","logo":"","url":"https://s6.kkphimplayer6.com/20251010/86AEDncn/3500kb/hls/index.m3u8"},{"name":"Conan Movie 28 - Dư Ảnh Của Độc Nhãn","group":"🎟️ SỰ KIỆN","logo":"","url":"https://vodcdn.fptplay.net/POVOD/encoded/2025/12/28/thamtulungdanhconanduanhcuadocnhan-detectiveconanoneeyedflashback-2025-dolby-mav-bb8d776e6f35fe41/H264/stream.mpd?st=8PSyksBMiL_tvRpq4B3-eg&expires=1767859023"},{"name":"Trái Tim Què Quặt","group":"🎟️ SỰ KIỆN","logo":"","url":"https://s6.kkphimplayer6.com/20251228/0HQf0tP2/3500kb/hls/index.m3u8"},{"name":"Quỷ Nhập Tràng","group":"🎟️ SỰ KIỆN","logo":"","url":"https://s6.kkphimplayer6.com/20260129/HDz8Fu0F/3500kb/hls/index.m3u8"},{"name":"Tử Chiến Trên Không","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/72x1ns/playlist.m3u8"},{"name":"Hùng Long Phong Bá Phần 4 - Tập 1","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/73gr0i/playlist.m3u8"},{"name":"Hùng Long Phong Bá Phần 4 - Tập 2","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/73k35o/playlist.m3u8"},{"name":"Hùng Long Phong Bá Phần 4 - Tập 3","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/73os1q/playlist.m3u8"},{"name":"Hùng Long Phong Bá Phần 4 - Tập 4","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/73s4u6/playlist.m3u8"},{"name":"Hùng Long Phong Bá Phần 4 - Tập 5","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/73txdq/playlist.m3u8"},{"name":"Hùng Long Phong Bá Phần 4 - Tập Cuối","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/73vrdu/playlist.m3u8"},{"name":"Thế Hệ Kỳ Tích","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/745t9a/playlist.m3u8"},{"name":"Truy Tìm Long Diên Hương","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/74h9mw/playlist.m3u8"},{"name":"Khế Ước Bán Dâu","group":"🎟️ SỰ KIỆN","logo":"","url":"https://s6.kkphimplayer6.com/20260118/tdyKqxYZ/3500kb/hls/index.m3u8"},{"name":"Thiên Đường Máu","group":"🎟️ SỰ KIỆN","logo":"","url":"https://s6.kkphimplayer6.com/20260320/02bq9QLy/3500kb/hls/index.m3u8"},{"name":"Cục Vàng Của Ngoại","group":"🎟️ SỰ KIỆN","logo":"","url":"https://s6.kkphimplayer6.com/20260403/6UwV8LAv/3500kb/hls/index.m3u8"},{"name":"Cuốc Xe Âm Phủ - Tập 1","group":"🎟️ SỰ KIỆN","logo":"","url":"https://v7.kkphimplayer7.com/20260502/89qXv3Fa/3500kb/hls/index.m3u8"},{"name":"Cuốc Xe Âm Phủ - Tập 2","group":"🎟️ SỰ KIỆN","logo":"","url":"https://v7.kkphimplayer7.com/20260503/Lp2p18eb/3500kb/hls/index.m3u8"},{"name":"Cuốc Xe Âm Phủ - Tập 3","group":"🎟️ SỰ KIỆN","logo":"","url":"https://v7.kkphimplayer7.com/20260504/9JB48ezG/3500kb/hls/index.m3u8"},{"name":"Cuốc Xe Âm Phủ - Tập 4","group":"🎟️ SỰ KIỆN","logo":"","url":"https://v7.kkphimplayer7.com/20260504/xNE4czZl/3500kb/hls/index.m3u8"},{"name":"Cuốc Xe Âm Phủ - Tập Cuối","group":"🎟️ SỰ KIỆN","logo":"","url":"https://v7.kkphimplayer7.com/20260505/6REaXK8f/3500kb/hls/index.m3u8"},{"name":"Nhà Hai Chủ","group":"🎟️ SỰ KIỆN","logo":"","url":"https://v7.kkphimplayer7.com/20260505/YnFXHB6A/3500kb/hls/index.m3u8"},{"name":"Thỏ Ơi","group":"🎟️ SỰ KIỆN","logo":"","url":"https://v7.kkphimplayer7.com/20260531/mazEQT6f/3500kb/hls/index.m3u8"},{"name":"Hoàng Tử Quỷ","group":"🎟️ SỰ KIỆN","logo":"","url":"https://v7.kkphimplayer7.com/20260615/qtiKqvFo/3500kb/hls/index.m3u8"},{"name":"Báu Vật Trời Cho","group":"🎟️ SỰ KIỆN","logo":"","url":"https://v7.kkphimplayer7.com/20260617/QgEs8NDH/index.m3u8"},{"name":"Cưới Vợ Cho Cha","group":"🎟️ SỰ KIỆN","logo":"","url":"https://v7.kkphimplayer7.com/20260711/ATJuS0IV/3500kb/hls/index.m3u8"},{"name":"Tài","group":"🎟️ SỰ KIỆN","logo":"","url":"https://v7.kkphimplayer7.com/20260729/UgOYpPkC/3500kb/hls/index.m3u8"},{"name":"Quỷ Nhập Tràng 2","group":"🎟️ SỰ KIỆN","logo":"","url":"https://v7.kkphimplayer7.com/20260820/QT327Pkh/3500kb/hls/index.m3u8"},{"name":"Anh Hùng","group":"🎟️ SỰ KIỆN","logo":"","url":"https://v7.kkphimplayer7.com/20260821/1tcAZTSo/3500kb/hls/index.m3u8"},{"name":"Con Kể Ba Nghe","group":"🎟️ SỰ KIỆN","logo":"","url":"https://v7.kkphimplayer7.com/20260827/WX44Nosv/3500kb/hls/index.m3u8"},{"name":"Oshi No Ko Phần 3 - Tập 1","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/72av32/playlist.m3u8"},{"name":"Oshi No Ko Phần 3 - Tập 2","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/72nhy6/playlist.m3u8"},{"name":"Oshi No Ko Phần 3 - Tập 3","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/73bg84/playlist.m3u8"},{"name":"Oshi No Ko Phần 3 - Tập 4","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/73gpe4/playlist.m3u8"},{"name":"Oshi No Ko Phần 3 - Tập 5","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/73uq6q/playlist.m3u8"},{"name":"Oshi No Ko Phần 3 - Tập 7","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/74da00/playlist.m3u8"},{"name":"Oshi No Ko Phần 3 - Tập 10","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/757w6u/playlist.m3u8"},{"name":"Oshi No Ko Phần 3 - Tập 11","group":"🎟️ SỰ KIỆN","logo":"","url":"https://rumble.com/hls-vod/75uhgc/playlist.m3u8"},{"name":"Al Saudiya","group":"🎯 TỔNG HỢP","logo":"","url":"https://shd-gcp-live.edgenextcdn.net/live/bitmovin-saudi-tv/2ad66056b51fd8c1b624854623112e43/index.m3u8"},{"name":"Dubai TV International","group":"🎯 TỔNG HỢP","logo":"","url":"http://185.9.2.18/chid_139/tracks-v1a1/mono.m3u8"},{"name":"KBS WORLD","group":"🎯 TỔNG HỢP","logo":"https://i.imgur.com/LbKpthb.png","url":"https://live.fptplay53.net/epzhd2/kbs_vhls.smil/chunklist_b5000000.m3u8"},{"name":"MCOT HD","group":"🎯 TỔNG HỢP","logo":"","url":"https://mcothd-streaming-edge-cdn.mcot.net/tencentmcot/smil:tencentmcot.smil/playlist.m3u8"},{"name":"NHK WORLD PREMIUM","group":"🎯 TỔNG HỢP","logo":"","url":"https://media-osa.hls.nhkworld.jp/hls/wp/live/master.m3u8"},{"name":"Rai Italia","group":"🎯 TỔNG HỢP","logo":"","url":"https://d3k8wzt41aflvx.cloudfront.net/RAIHD/Live.m3u8"},{"name":"TDM Macau Satellite","group":"🎯 TỔNG HỢP","logo":"","url":"https://globallive.tdm.com.mo/ch3/ch3.live/playlist.m3u8"},{"name":"TV5 MONDE","group":"🎯 TỔNG HỢP","logo":"https://i.postimg.cc/9fP9RZxK/TV5MONDE.png","url":"https://live.fptplay53.net/fnxhd2/tv5_hls.smil/chunklist_b2500000.m3u8"},{"name":"Zabb Channel","group":"🎯 TỔNG HỢP","logo":"","url":"https://vdo.plathong.net/flash7057/flash7057/playlist.m3u8"},{"name":"1+1 International","group":"🎯 TỔNG HỢP","logo":"","url":"https://dash.antik.sk/live/test_one_plus_one_int_tizen/playlist.m3u8"},{"name":"ОшТВ","group":"🎯 TỔNG HỢP","logo":"","url":"http://212.42.117.34:8080/hls/OshTV.m3u8"},{"name":"Союзный","group":"🎯 TỔNG HỢP","logo":"","url":"http://souzny.mediacdn.ru/cdn/souzny/tracks-v1a1/mono.ts.m3u8"},{"name":"ON Vie Giải Trí","group":"🎭 GIẢI TRÍ","logo":"","url":"https://tv.vietanhtv.top/vieon/vieon.php?id=vie-giai-tri-hd"},{"name":"tvN","group":"🎭 GIẢI TRÍ","logo":"","url":"https://d21dxaer0ypwk1.cloudfront.net/v1/master/3722c60a815c199d9c0ef36c5b73da68a62b09d1/cc-a6m2cy2rylsvo-ssai-prd/54ac8e25_eb5a_4f10_ba20_ffb254f0a16c/hls/playlist.m3u8"},{"name":"WARNER TV HD","group":"🎭 GIẢI TRÍ","logo":"","url":"http://cdn4.skygo.mn/live/disk1/Warner/HLSv3-FTA/Warner.m3u8"},{"name":"ZEE Bangla Sonar","group":"🎭 GIẢI TRÍ","logo":"","url":"https://d1g8wgjurz8via.cloudfront.net/bpk-tv/ColorsHD/default/ColorsHD.m3u8"},{"name":"СТС International","group":"🎭 GIẢI TRÍ","logo":"","url":"http://fs.uplink.kz/sts/mono.m3u8?token=onlinetv"},{"name":"Домашний","group":"🎭 GIẢI TRÍ","logo":"","url":"http://fs.uplink.kz/domashniy/mono.m3u8?token=onlinetv"},{"name":"Пятница!","group":"🎭 GIẢI TRÍ","logo":"","url":"http://api.dommir.top/ch/Pyatniza_HD/playlist.m3u8"},{"name":"ТНТ","group":"🎭 GIẢI TRÍ","logo":"","url":"http://api.dommir.top/ch/TNT_SD/playlist.m3u8"},{"name":"ТНТ4 International","group":"🎭 GIẢI TRÍ","logo":"","url":"http://fs.uplink.kz/tnt4/mono.m3u8?token=onlinetv"},{"name":"СТС Love","group":"🎭 GIẢI TRÍ","logo":"","url":"http://fs.uplink.kz/sts_love/tracks-v1a1/mono.ts.m3u8?token=onlinetv"},{"name":"Телеканал Ю","group":"🎭 GIẢI TRÍ","logo":"","url":"http://flussonic.mkpnet.ru/tv-3b21847ece4b1c19/video.m3u8"},{"name":"2x2","group":"🎭 GIẢI TRÍ","logo":"","url":"http://flussonic.mkpnet.ru/tv-17540fb90079a865/video.m3u8"},{"name":"Суббота","group":"🎭 GIẢI TRÍ","logo":"","url":"http://flussonic.mkpnet.ru/tv-2e0a7cc949958b60/video.m3u8"},{"name":"Перец","group":"🎭 GIẢI TRÍ","logo":"","url":"http://api.dommir.top/ch/Perets_RU/playlist.m3u8"},{"name":"7TV","group":"🎭 GIẢI TRÍ","logo":"","url":"http://v4.proofix.ru/7tv-live/tracks-v1a1/mono.m3u8"},{"name":"8 канал","group":"🎭 GIẢI TRÍ","logo":"","url":"http://v4.proofix.ru/8tv-europe/tracks-v1a1/mono.m3u8"},{"name":"Продвижение","group":"🎭 GIẢI TRÍ","logo":"","url":"http://origin5.mediacdn.ru/live/prodvizhenie_new/index.m3u8"},{"name":"7 канал Казахстан","group":"🎭 GIẢI TRÍ","logo":"","url":"http://fs.uplink.kz/7_kanal/mono.m3u8?token=onlinetv"},{"name":"FashionBox","group":"🎭 GIẢI TRÍ","logo":"","url":"https://dash.antik.sk/live/test_fashionbox_medium_atk/playlist.m3u8"},{"name":"Luxury","group":"🎭 GIẢI TRÍ","logo":"","url":"http://s1.tv-nano.com/Luxury_rec/tracks-v1a1/index.m3u8"},{"name":"TVM Channel","group":"🎭 GIẢI TRÍ","logo":"","url":"http://cdn-01.bonus-tv.ru/tvm_edge/tracks-v1a1/mono.m3u8"},{"name":"ВОПРОСЫ И ОТВЕТЫ","group":"🎭 GIẢI TRÍ","logo":"","url":"http://stream8.cinerama.uz/1429/tracks-v1a1/mono.m3u8"},{"name":"КВН ТВ","group":"🎭 GIẢI TRÍ","logo":"","url":"http://fs.uplink.kz/kvn_tv/mono.m3u8?token=onlinetv"},{"name":"Новое телевидение","group":"🎭 GIẢI TRÍ","logo":"","url":"https://live.zhanafm.kz:8181/memfs/fd715789-382f-4ec6-b4ba-d8e2fde59c7b.m3u8"},{"name":"НТК","group":"🎭 GIẢI TRÍ","logo":"","url":"http://fs.uplink.kz/ntk/mono.m3u8?token=onlinetv"},{"name":"Сарафан","group":"🎭 GIẢI TRÍ","logo":"","url":"http://stream8.cinerama.uz/1249/tracks-v1a1/mono.m3u8"},{"name":"ON Vie DRAMAS","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://dvrfl05.bozztv.com/vch_vchannel18/tracks-v1a1/mono.m3u8"},{"name":"ZEE Cinema","group":"🎞️ PHIM TRUYỆN","logo":"","url":"https://d1g8wgjurz8via.cloudfront.net/bpk-tv/NGCHD/default/NGCHD.m3u8"},{"name":"Amedia 1","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://fs.uplink.kz/amedia_1/mono.m3u8?token=onlinetv"},{"name":"Amedia 2","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://flussonic.mkpnet.ru/tv-cad19a32f4a82824/video.m3u8"},{"name":"Amedia Hit","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://fs.uplink.kz/amedia_hit_hd/mono.m3u8?token=onlinetv"},{"name":"Amedia Premium","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://fs.uplink.kz/amedia_premium_hd/mono.m3u8?token=onlinetv"},{"name":"Bollywood","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1444/tracks-v1a1/mono.m3u8"},{"name":"Bolt","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream.mcquack.net/73/index.m3u8"},{"name":"Cinema","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1227/tracks-v1a1/mono.m3u8"},{"name":"Filmbox","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://88.212.15.19/live/test_filmbox/playlist.m3u8"},{"name":"Filmbox Arthouse","group":"🎞️ PHIM TRUYỆN","logo":"","url":"https://dash.antik.sk/live/test_filmbox_arthouse_atk_1200/playlist.m3u8"},{"name":"FilmUADrama","group":"🎞️ PHIM TRUYỆN","logo":"","url":"https://dash.antik.sk/live/test_film_drama_atktv/playlist.m3u8"},{"name":"FilmUA Live","group":"🎞️ PHIM TRUYỆN","logo":"","url":"https://dash.antik.sk/live/test_film_life_atktv/playlist.m3u8"},{"name":"HOLLYWOOD","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1443/tracks-v1a1/mono.m3u8"},{"name":"Star Cinema","group":"🎞️ PHIM TRUYỆN","logo":"","url":"https://dash.antik.sk/live/test_star_cinema_atktv/playlist.m3u8"},{"name":"Star Family","group":"🎞️ PHIM TRUYỆN","logo":"","url":"https://dash.antik.sk/live/test_star_family_atktv/playlist.m3u8"},{"name":"Viju TV1000","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1058/tracks-v1a1/mono.m3u8"},{"name":"Viju TV1000 Action","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1225/tracks-v1a1/mono.m3u8"},{"name":"Viju TV1000 Русское кино","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1059/tracks-v1a1/mono.m3u8"},{"name":"viju+ Comedy","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1061/tracks-v1a1/mono.m3u8"},{"name":"viju+ Megahit","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://flussonic.mkpnet.ru/tv-3d1cedf99303d057/video.m3u8"},{"name":"viju+ Premiere","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1056/tracks-v1a1/mono.m3u8"},{"name":"viju+ Serial","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1224/tracks-v1a1/mono.m3u8"},{"name":"Дом Кино Int.","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://cdn4.skygo.mn/live/disk1/DomPremium/HLSv3-FTA/DomPremium.m3u8"},{"name":"Дом Кино Премиум HD","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://fs.uplink.kz/dom_kino_premium/mono.m3u8?token=onlinetv"},{"name":"Дорама","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1273/tracks-v1a1/mono.m3u8"},{"name":"ЕВРОКИНО","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://vod.tuva.ru/eurokino/index.m3u8"},{"name":"Индия","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://fs.uplink.kz/india/mono.m3u8?token=onlinetv"},{"name":"Индийское Кино","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1060/tracks-v1a1/mono.m3u8"},{"name":"Настоящее Страшное Телевидение","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://vod.tuva.ru/nst/index.m3u8"},{"name":"Наше Новое Кино","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1051/tracks-v1a1/mono.m3u8"},{"name":"Кино ТВ","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://185.46.16.239:8000/Kino_TV"},{"name":"Киносерия","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1235/tracks-v1a1/mono.m3u8"},{"name":"Кинопремьера HD","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1207/tracks-v1a1/mono.m3u8"},{"name":"Киносвидание HD","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1203/tracks-v1a1/mono.m3u8"},{"name":"Кинокомедия","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1232/tracks-v1a1/mono.m3u8"},{"name":"Киномикс","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1233/tracks-v1a1/mono.m3u8"},{"name":"Кинопоказ","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1057/tracks-v1a1/mono.m3u8"},{"name":"Киноман","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://flussonic.mkpnet.ru/tv-e055808223a74709/video.m3u8"},{"name":"Кинохит","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1055/tracks-v1a1/mono.m3u8"},{"name":"Мосфильм. Золотая коллекция","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://fs.uplink.kz/mosfilm/mono.ts.m3u8?token=onlinetv"},{"name":"Ретро","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1047/tracks-v1a1/mono.m3u8"},{"name":"Родное Кино","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://stream8.cinerama.uz/1052/tracks-v1a1/mono.m3u8"},{"name":"Русский Бестселлер","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://flussonic.mkpnet.ru/tv-ccf8c891702508a7/video.m3u8"},{"name":"Русский детектив","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://flussonic.mkpnet.ru/tv-2997fed720614567/video.m3u8"},{"name":"Русский иллюзион. Международная версия","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://fs.uplink.kz/russkiy_illusion/tracks-v1a1/mono.ts.m3u8?token=onlinetv"},{"name":"Русский роман","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://flussonic.mkpnet.ru/tv-c90a71c34cc779ac/video.m3u8"},{"name":"ТВ 21","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://fs.uplink.kz/tvxxi/mono.m3u8?token=onlinetv"},{"name":"Победа","group":"🎞️ PHIM TRUYỆN","logo":"","url":"http://api.dommir.top/ch/POBEDA_HD/playlist.m3u8"},{"name":"CARTOON NETWORK HD","group":"🧸 THIẾU NHI","logo":"","url":"http://cdn4.skygo.mn/live/disk1/Cartoon_Network/HLSv3-FTA/Cartoon_Network.m3u8"},{"name":"CARTOONITO HD","group":"🧸 THIẾU NHI","logo":"","url":"http://cdn4.skygo.mn/live/disk1/Boomerang/HLSv3-FTA/Boomerang.m3u8"},{"name":"CCTV14","group":"🧸 THIẾU NHI","logo":"","url":"http://cdn4.skygo.mn/live/disk1/CCTV-14/HLSv3-FTA/CCTV-14.m3u8"},{"name":"DUCK TV HD","group":"🧸 THIẾU NHI","logo":"","url":"https://dash.antik.sk/live/duck_tv/index.m3u8"},{"name":"ZOOMOO HD","group":"🧸 THIẾU NHI","logo":"","url":"https://zoomoo-samsungau.amagi.tv/playlist1080p.m3u8"},{"name":"Карусель International","group":"🧸 THIẾU NHI","logo":"","url":"http://fs.uplink.kz/karusel/mono.m3u8?token=onlinetv"},{"name":"Ani","group":"🧸 THIẾU NHI","logo":"","url":"http://185.46.16.239:8000/Ani"},{"name":"Balapan","group":"🧸 THIẾU NHI","logo":"","url":"http://live-3.otcnet.ru/Balapan/tracks-v1a1/mono.m3u8"},{"name":"Анекдот ТВ","group":"🧸 THIẾU NHI","logo":"","url":"http://api.dommir.top/ch/Anekdot_TV/playlist.m3u8"},{"name":"В гостях у сказки","group":"🧸 THIẾU NHI","logo":"","url":"http://stream8.cinerama.uz/1270/tracks-v1a1/mono.m3u8"},{"name":"Детский","group":"🧸 THIẾU NHI","logo":"","url":"http://stream8.cinerama.uz/1033/tracks-v1a1/mono.m3u8"},{"name":"Капитан Фантастика","group":"🧸 THIẾU NHI","logo":"","url":"http://stream8.cinerama.uz/1406/tracks-v1a1/mono.m3u8"},{"name":"Мама","group":"🧸 THIẾU NHI","logo":"","url":"http://stream8.cinerama.uz/1244/tracks-v1a1/mono.m3u8"},{"name":"Мульт","group":"🧸 THIẾU NHI","logo":"","url":"http://stream8.cinerama.uz/1246/tracks-v1a1/mono.m3u8"},{"name":"Мультиландия","group":"🧸 THIẾU NHI","logo":"","url":"http://stream8.cinerama.uz/1440/tracks-v1a1/mono.m3u8"},{"name":"О! International","group":"🧸 THIẾU NHI","logo":"","url":"http://cdn4.skygo.mn/live/disk1/O_Int/HLSv3-FTA/O_Int.m3u8"},{"name":"РЫЖИЙ","group":"🧸 THIẾU NHI","logo":"","url":"http://stream8.cinerama.uz/1407/tracks-v1a1/mono.m3u8"},{"name":"РУ.ТВ Кидс","group":"🧸 THIẾU NHI","logo":"","url":"http://rutvkids.ru/live/efir/index.m3u8"},{"name":"Солнце","group":"🧸 THIẾU NHI","logo":"","url":"http://tv.mediacdn.ru/live/solntse/playlist.m3u8"},{"name":"СТС Kids","group":"🧸 THIẾU NHI","logo":"","url":"http://fs.uplink.kz/sts_kids/mono.m3u8?token=onlinetv"},{"name":"ABC NEWS","group":"🗞️ TIN TỨC","logo":"","url":"https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index_5.m3u8"},{"name":"ABP NEWS","group":"🗞️ TIN TỨC","logo":"","url":"https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg01412-xiaomiasia-abpnews-xiaomi/playlist.m3u8"},{"name":"Al Arabiya","group":"🗞️ TIN TỨC","logo":"","url":"https://live.alarabiya.net/alarabiapublish/alarabiya.smil/alarabiapublish/alarabiya_1080p/chunks.m3u8"},{"name":"ALJAZEERA","group":"🗞️ TIN TỨC","logo":"","url":"https://live-hls-apps-aje-fa.getaj.net/AJE/01.m3u8"},{"name":"BLOOMBERG","group":"🗞️ TIN TỨC","logo":"","url":"https://cdn4.skygo.mn/live/disk1/Bloomberg/HLSv3-FTA/Bloomberg.m3u8"},{"name":"CNA","group":"🗞️ TIN TỨC","logo":"https://i.imgur.com/W70LTtj.png","url":"https://live.fptplay53.net/fnxhd2/newsasia_hls.smil/chunklist_b2500000.m3u8"},{"name":"CNN","group":"🗞️ TIN TỨC","logo":"","url":"https://d3bp6dwmpbdajl.cloudfront.net/v1/master/3722c60a815c199d9c0ef36c5b73da68a62b09d1/cc-ury0meh5m4nzm/index.m3u8"},{"name":"CGTN ARABIC","group":"🗞️ TIN TỨC","logo":"","url":"https://0472.org/hls/cgtna.m3u8"},{"name":"CGTN FRENCH","group":"🗞️ TIN TỨC","logo":"","url":"https://0472.org/hls/cgtnf.m3u8"},{"name":"CGTN SPANISH","group":"🗞️ TIN TỨC","logo":"","url":"https://0472.org/hls/cgtnx.m3u8"},{"name":"CGTN РУССКИЙ","group":"🗞️ TIN TỨC","logo":"","url":"https://0472.org/hls/cgtne.m3u8"},{"name":"Democratic Voice of Burma TV","group":"🗞️ TIN TỨC","logo":"","url":"https://live-stream.dvb.no/hls/stream_src/index.m3u8"},{"name":"DW","group":"🗞️ TIN TỨC","logo":"https://i.imgur.com/g5g4KJc.png","url":"https://live.fptplay53.net/fnxhd2/dwenglish_hls.smil/chunklist_b2500000.m3u8"},{"name":"Euronews","group":"🗞️ TIN TỨC","logo":"","url":"https://a-cdn.klowdtv.com/live3/euronews_720p/playlist.m3u8"},{"name":"FRANCE 24 ENGLISH","group":"🗞️ TIN TỨC","logo":"https://i.imgur.com/61MSiq9.png","url":"https://live.fptplay53.net/fnxhd2/france24_hls.smil/chunklist_b2500000.m3u8"},{"name":"FRANCE 24 FRENCH","group":"🗞️ TIN TỨC","logo":"","url":"https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8"},{"name":"FOX NEWS","group":"🗞️ TIN TỨC","logo":"","url":"http://247preview.foxnews.com/hls/live/2020027/fncv3preview/primary.m3u8"},{"name":"India TV","group":"🗞️ TIN TỨC","logo":"","url":"https://pl-indiatvnews.akamaized.net/out/v1/db79179b608641ceaa5a4d0dd0dca8da/index.m3u8"},{"name":"News One","group":"🗞️ TIN TỨC","logo":"","url":"https://vodzong.mjunoon.tv:8087/streamtest/NEWS1-128/playlist.m3u8"},{"name":"SKY NEWS","group":"🗞️ TIN TỨC","logo":"","url":"https://amg00663-skynews-skynewsau-samsungau-r7n40.amagi.tv/playlist720p.m3u8"},{"name":"STOU Channel","group":"🗞️ TIN TỨC","logo":"","url":"https://stream1.stou.ac.th/live/stou_720p/playlist.m3u8"},{"name":"Police TV","group":"🗞️ TIN TỨC","logo":"","url":"https://cdn-th-vip.livestreaming.in.th/policetv/policetv/playlist.m3u8"},{"name":"Press TV","group":"🗞️ TIN TỨC","logo":"","url":"http://live.presstv.ir/hls/presstv.m3u8"},{"name":"Republic TV","group":"🗞️ TIN TỨC","logo":"","url":"https://d3qs3d2rkhfqrt.cloudfront.net/out/v1/2e31d831f08640ff92f65003bdc89991/index.m3u8"},{"name":"Russia Today","group":"🗞️ TIN TỨC","logo":"","url":"https://wisewatchoott.wiseplayout.com/RT/HD1080/HD1080.m3u8"},{"name":"RT en Espanol","group":"🗞️ TIN TỨC","logo":"","url":"https://streamtv.onliv3.online:1936/exito-tv/exito-tv/playlist.m3u8"},{"name":"Thai Parliament TV","group":"🗞️ TIN TỨC","logo":"","url":"https://tv-live.tpchannel.org/live/tv.m3u8"},{"name":"Top News","group":"🗞️ TIN TỨC","logo":"","url":"https://live.topnews.co.th/hls/topnews_a_720.m3u8"},{"name":"YTN","group":"🗞️ TIN TỨC","logo":"","url":"https://tistory1.daumcdn.net/tistory/2864485/skin/images/CATV_215_6B2BDBDE.m3u8"},{"name":"Zee News","group":"🗞️ TIN TỨC","logo":"","url":"https://dknttpxmr0dwf.cloudfront.net/index_57.m3u8"},{"name":"Россия 24","group":"🗞️ TIN TỨC","logo":"","url":"http://stream.smotrim.ru/hls/russia24_int/playlist_3.m3u8"},{"name":"РБК","group":"🗞️ TIN TỨC","logo":"","url":"http://92.50.128.180/utv/1358/index.m3u8"},{"name":"Телеканал Известия","group":"🗞️ TIN TỨC","logo":"","url":"http://igi-hls.cdnvideo.ru/igi/igi_tcode/tracks-v1a1/mono.m3u8"},{"name":"МИР 24 HD","group":"🗞️ TIN TỨC","logo":"","url":"http://hls-mirtv.cdnvideo.ru/mirtv-parampublish/mir24_2500/tracks-v1a1/mono.m3u8"},{"name":"360° Подмосковье HD","group":"🗞️ TIN TỨC","logo":"","url":"http://live-vgtrksmotrim.cdnvideo.ru/vgtrksmotrim/smotrim-live-03-srt.smil/tracks-v5a1/mono.m3u8"},{"name":"360° Новости HD","group":"🗞️ TIN TỨC","logo":"","url":"http://live-vgtrksmotrim.cdnvideo.ru/vgtrksmotrim/smotrim-live-04-srt.smil/tracks-v5a1/mono.m3u8"},{"name":"Катунь 24","group":"🗞️ TIN TỨC","logo":"","url":"https://live.katun24.ru:8082/katun/katun/index.m3u8"},{"name":"КРИК-ТВ","group":"🗞️ TIN TỨC","logo":"","url":"http://hls-rictv.cdnvideo.ru/rictv/rictv-srt-stream/playlist.m3u8"},{"name":"Москва 24","group":"🗞️ TIN TỨC","logo":"","url":"http://stream.smotrim.ru/hls/moscow_24/playlist_3.m3u8"},{"name":"ТВК","group":"🗞️ TIN TỨC","logo":"","url":"http://air.tvk6.ru/tvk24/tracks-v1a1/mono.m3u8"},{"name":"Толк","group":"🗞️ TIN TỨC","logo":"","url":"http://live-tolknews.cdnvideo.ru/tolknews/stream/tracks-v1a1/mono.m3u8"},{"name":"Конгресс ТВ","group":"🗞️ TIN TỨC","logo":"","url":"http://stitch.teletarget.ru/api/v1/hls/504/158/index.m3u8"},{"name":"24KZ","group":"🗞️ TIN TỨC","logo":"","url":"http://stream8.cinerama.uz/1408/tracks-v1a1/mono.m3u8"},{"name":"Вместе-РФ","group":"🗞️ TIN TỨC","logo":"","url":"http://qcpdqumitwf.a.trbcdn.net/livemastersrt/pr4mw_lvie-vmesterf-srt.smil/playlist.m3u8"},{"name":"Беларусь 24","group":"🗞️ TIN TỨC","logo":"","url":"http://ott-7.sevstar.net/belarus24/tracks-v1a1/mono.m3u8"},{"name":"Еспресо TV International","group":"🗞️ TIN TỨC","logo":"","url":"https://dash.antik.sk/live/test_espresso/playlist.m3u8"},{"name":"Настоящее Время","group":"🗞️ TIN TỨC","logo":"","url":"https://rferl-ingest.akamaized.net/hls/live/2121657/tvmc05/playlist_1080.m3u8"},{"name":"ЛДПР ТВ","group":"🗞️ TIN TỨC","logo":"","url":"http://46.46.143.222:1935/live/mp4:ldpr.stream_480p/playlist.m3u8"},{"name":"Соловьев Live","group":"🗞️ TIN TỨC","logo":"","url":"http://stream.smotrim.ru/hls/solovievlive/playlist_6.m3u8"},{"name":"CLUBBING TV","group":"🎧 CA NHẠC","logo":"","url":"https://a-cdn.klowdtv.com/live3/clubbingtv_720p/playlist.m3u8"},{"name":"JooMusic","group":"🎧 CA NHẠC","logo":"","url":"https://livecdn.live247stream.com/joomusic/tv/playlist.m3u8"},{"name":"TRACE URBAN HD","group":"🎧 CA NHẠC","logo":"","url":"https://lightning-traceurban-samsungau.amagi.tv/playlist1080p.m3u8"},{"name":"МУЗ-ТВ","group":"🎧 CA NHẠC","logo":"","url":"http://flussonic.mkpnet.ru/tv-4a4cb3e0aac082c9/video.m3u8"},{"name":"РУ.ТВ","group":"🎧 CA NHẠC","logo":"","url":"http://flussonic.mkpnet.ru/tv-64b2c4ff13365817/video.m3u8"},{"name":"1HD Music Television","group":"🎧 CA NHẠC","logo":"","url":"http://stream8.cinerama.uz/1267/tracks-v1a1/mono.m3u8"},{"name":"Baby time","group":"🎧 CA NHẠC","logo":"","url":"http://fs.uplink.kz/baby_time/mono.m3u8?token=onlinetv"},{"name":"BRIDGE","group":"🎧 CA NHẠC","logo":"","url":"http://flussonic.mkpnet.ru/tv-ceaa6aa3cc1ea359/video.m3u8"},{"name":"BRIDGE Classic","group":"🎧 CA NHẠC","logo":"","url":"http://fs.uplink.kz/bridge_classic/mono.m3u8?token=onlinetv"},{"name":"Europa Plus TV","group":"🎧 CA NHẠC","logo":"","url":"http://fs.uplink.kz/europa_plus/tracks-v1a1/mono.ts.m3u8?token=onlinetv"},{"name":"Fon Music","group":"🎧 CA NHẠC","logo":"","url":"http://tntm.mediacdn.ru/cdn/tntmusic/tracks-v1a1/mono.m3u8"},{"name":"Maidan","group":"🎧 CA NHẠC","logo":"","url":"http://live-maidantv.cdnvideo.ru/maidantv/maidantv.smil/playlist.m3u8"},{"name":"Mezzo","group":"🎧 CA NHẠC","logo":"","url":"http://live-3.otcnet.ru/Mezzo/tracks-v1a1/mono.m3u8"},{"name":"Первый Музыкальный","group":"🎧 CA NHẠC","logo":"","url":"http://136.243.42.146/HLS/HD.m3u8"},{"name":"Музыка Live","group":"🎧 CA NHẠC","logo":"","url":"http://stream8.cinerama.uz/1238/tracks-v1a1/mono.m3u8"},{"name":"Музыка первого","group":"🎧 CA NHẠC","logo":"","url":"http://stream8.cinerama.uz/1201/tracks-v1a1/mono.m3u8"},{"name":"МузСоюз","group":"🎧 CA NHẠC","logo":"","url":"http://hls-tvsoyuz.cdnvideo.ru/tvsoyuz2/muzsoyuz.6fw0-58xp-acts-esy0/playlist.m3u8"},{"name":"Страна ТВ","group":"🎧 CA NHẠC","logo":"","url":"http://live.stranafm.cdnvideo.ru/stranafm/stranafm.sdp/playlist.m3u8"},{"name":"Шансон ТВ","group":"🎧 CA NHẠC","logo":"","url":"http://hls-shansontv.cdnvideo.ru/shansontv/shansontv.sdp/playlist.m3u8"},{"name":"Жара","group":"🎧 CA NHẠC","logo":"","url":"http://flussonic.mkpnet.ru/tv-3cdc33d3606ba23f/video.m3u8"},{"name":"ANGEL TV","group":"💎 ĐẶC SẮC","logo":"","url":"https://janya-digimix.akamaized.net/vglive-sk-703035/indochina/ngrp:angelindochina_all/playlist.m3u8"},{"name":"Boonniyom TV","group":"💎 ĐẶC SẮC","logo":"","url":"https://live.x2.co.th/live/bntv.m3u8"},{"name":"CCTV10","group":"💎 ĐẶC SẮC","logo":"","url":"http://cdn4.skygo.mn/live/disk1/CCTV-10/HLSv3-FTA/CCTV-10.m3u8"},{"name":"CGTN DOCUMENTARY","group":"💎 ĐẶC SẮC","logo":"","url":"http://cdn4.skygo.mn/live/disk1/CGTN_Doc/HLSv3-FTA/CGTN_Doc.m3u8"},{"name":"DISCOVERY CHANNEL HD","group":"💎 ĐẶC SẮC","logo":"","url":"http://cdn4.skygo.mn/live/disk1/SoutheastAsia/HLSv3-FTA/SoutheastAsia.m3u8"},{"name":"DISCOVERY SCIENCE HD","group":"💎 ĐẶC SẮC","logo":"","url":"http://cdn4.skygo.mn/live/disk1/ScienceSoutheast/HLSv3-FTA/ScienceSoutheast.m3u8"},{"name":"English Club TV","group":"💎 ĐẶC SẮC","logo":"","url":"https://dash.antik.sk/live/test_ectv_hd_1200/playlist.m3u8"},{"name":"EWTN Africa-Asia","group":"💎 ĐẶC SẮC","logo":"","url":"https://cdn3.wowza.com/1/ZVBYYXFLLzE0c3NC/Qk1FMURC/hls/live/playlist.m3u8"},{"name":"God Stands TV","group":"💎 ĐẶC SẮC","logo":"","url":"https://online.godstands.tv:5443/WebRTCApp/streams/mainlive.m3u8"},{"name":"LOVE NATURE 4K","group":"💎 ĐẶC SẮC","logo":"","url":"https://pb-ehs1glsha1juy.akamaized.net/Love_Nature_4K.m3u8"},{"name":"Madani Channel Urdu","group":"💎 ĐẶC SẮC","logo":"","url":"https://streaming.madanichannel.tv/static/streaming-playlists/hls/b9790f10-cb0d-4e30-82bf-84a756234e58/master.m3u8"},{"name":"MTA6 Asia","group":"💎 ĐẶC SẮC","logo":"","url":"https://livemtaasia.akamaized.net/hls/live/2039224/mta6asia/playlist.m3u8"},{"name":"NBS","group":"💎 ĐẶC SẮC","logo":"","url":"https://media.joycorp.co.kr:4443/live/live_720p/chunklist.m3u8"},{"name":"SBN TV International","group":"💎 ĐẶC SẮC","logo":"","url":"https://watch.sardius.media/channels/Ea867F3e1F56B06/site_09a4778E89/live.m3u8"},{"name":"Sharjah TV","group":"💎 ĐẶC SẮC","logo":"","url":"https://live.kwikmotion.com/smc1live/smc1tv.smil/playlist.m3u8"},{"name":"Peace TV English","group":"💎 ĐẶC SẮC","logo":"","url":"https://dzkyvlfyge.erbvr.com/PeaceTvEnglish/index.m3u8"},{"name":"RT Documentary","group":"💎 ĐẶC SẮC","logo":"","url":"http://rt-rtd.rttv.com/live/rtdoc/playlist.m3u8"},{"name":"Россия Культура","group":"💎 ĐẶC SẮC","logo":"","url":"http://live.smotrim.ru/vgtrk/4/kultura-hd/track_105_e50aac4b/chunklist.m3u8"},{"name":"Спас","group":"💎 ĐẶC SẮC","logo":"","url":"http://tvspas.mediacdn.ru/cdn/spas/index.m3u8"},{"name":"Союз","group":"💎 ĐẶC SẮC","logo":"","url":"http://hls-tvsoyuz.cdnvideo.ru/tvsoyuz/soyuz/playlist.m3u8"},{"name":"ТНВ-Планета","group":"💎 ĐẶC SẮC","logo":"","url":"http://planeta.mediacdn.ru/cdn/tnvplanet/tracks-v1a1/mono.m3u8"},{"name":"Радость Моя","group":"💎 ĐẶC SẮC","logo":"","url":"http://radm.mediacdn.ru/cdn/radost/playlist.m3u8"},{"name":"365 дней ТВ","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1242/tracks-v1a1/mono.m3u8"},{"name":"DocuBox","group":"💎 ĐẶC SẮC","logo":"","url":"https://dash.antik.sk/live/test_docubox_medium_atk/playlist.m3u8"},{"name":"EQTV","group":"💎 ĐẶC SẮC","logo":"","url":"https://eqtv-eu.cdn-03.prmt-eu.com/hls/main/eqtv-eu/master.m3u8"},{"name":"GNC","group":"💎 ĐẶC SẮC","logo":"","url":"https://live-gnctv.cdnvideo.ru/gnctv_hls_tcode/gnctv_tc1/playlist.m3u8"},{"name":"NANO","group":"💎 ĐẶC SẮC","logo":"","url":"http://s1.tv-nano.com/Nano_rec/index.m3u8"},{"name":"RTG HD","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream.mcquack.net/164/index.m3u8"},{"name":"UNIVER TV","group":"💎 ĐẶC SẮC","logo":"","url":"http://cdn.universmotri.ru/live/mq.sdp/playlist.m3u8"},{"name":"viju Explore","group":"💎 ĐẶC SẮC","logo":"","url":"http://fs.uplink.kz/viju_explore/mono.m3u8?token=onlinetv"},{"name":"viju History","group":"💎 ĐẶC SẮC","logo":"","url":"http://fs.uplink.kz/viju_history/mono.m3u8?token=onlinetv"},{"name":"viju Nature","group":"💎 ĐẶC SẮC","logo":"","url":"http://fs.uplink.kz/viju_nature/mono.m3u8?token=onlinetv"},{"name":"Арсенал HD","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1414/tracks-v1a1/mono.m3u8"},{"name":"В Мире Животных HD","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1404/tracks-v1a1/mono.m3u8"},{"name":"Бобёр","group":"💎 ĐẶC SẮC","logo":"","url":"http://flussonic.mkpnet.ru/tv-319cadb3fff5fb3e/video.m3u8"},{"name":"Большая Азия","group":"💎 ĐẶC SẮC","logo":"","url":"http://live-bigasia.cdnvideo.ru/bigasia/bigasia.smil/playlist.m3u8"},{"name":"Драйв","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1421/tracks-v1a1/mono.m3u8"},{"name":"Дикий","group":"💎 ĐẶC SẮC","logo":"","url":"https://stream3.cinerama.uz/1230/tracks-v1a1/mono.m3u8"},{"name":"Доктор","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1409/tracks-v1a1/mono.m3u8"},{"name":"Глазами туриста","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1423/tracks-v1a1/mono.m3u8"},{"name":"Звезда Плюс","group":"💎 ĐẶC SẮC","logo":"","url":"http://tvzvezda.bonus-tv.ru/cdn/zvezdaplus/tracks-v1a1/mono.m3u8"},{"name":"Зоопарк","group":"💎 ĐẶC SẮC","logo":"","url":"http://fs.uplink.kz/zoopark/mono.m3u8?token=onlinetv"},{"name":"Наука 2.0","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1248/tracks-v1a1/mono.m3u8"},{"name":"Наша Сибирь","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1424/tracks-v1a1/mono.m3u8"},{"name":"Неизвестная Россия","group":"💎 ĐẶC SẮC","logo":"","url":"http://cdn.ntv.ru/unknown_russia/tracks-v1a1/playlist.m3u8"},{"name":"Калейдоскоп ТВ","group":"💎 ĐẶC SẮC","logo":"","url":"http://serv25.vintera.tv:8081/kaleidoscop/kaleidoscop_sd/playlist.m3u8"},{"name":"Кухня","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1236/tracks-v1a1/mono.m3u8"},{"name":"Лапки Live","group":"💎 ĐẶC SẮC","logo":"","url":"http://fs.uplink.kz/lapki_live/mono.m3u8?token=onlinetv"},{"name":"Моя Планета","group":"💎 ĐẶC SẮC","logo":"","url":"http://flussonic.mkpnet.ru/tv-6febc5aecf84848d/video.m3u8"},{"name":"Мужской","group":"💎 ĐẶC SẮC","logo":"","url":"http://flussonic.mkpnet.ru/tv-55c94e838b306657/video.m3u8"},{"name":"Открытый мир","group":"💎 ĐẶC SẮC","logo":"","url":"http://v4.proofix.ru/0mir/index.m3u8"},{"name":"Охота и Рыбалка","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1038/tracks-v1a1/mono.m3u8"},{"name":"Охотник и Рыболов HD","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1413/tracks-v1a1/mono.m3u8"},{"name":"История","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1266/tracks-v1a1/mono.m3u8"},{"name":"Первый Космический","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1415/tracks-v1a1/mono.m3u8"},{"name":"Приключения HD","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1420/tracks-v1a1/mono.m3u8"},{"name":"Просвещение","group":"💎 ĐẶC SẮC","logo":"","url":"http://cdn-01.bonus-tv.ru/prosveschenie_edge/tracks-v1a1/mono.m3u8"},{"name":"Телекафе","group":"💎 ĐẶC SẮC","logo":"","url":"http://fs.uplink.kz/telecafe/mono.m3u8?token=onlinetv"},{"name":"Техно 24","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1037/tracks-v1a1/mono.m3u8"},{"name":"Тонус ТВ","group":"💎 ĐẶC SẮC","logo":"","url":"http://tv.streams.baikal-telecom.net/Mir24/tracks-v1a1/mono.m3u8"},{"name":"Точка РФ","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1222/tracks-v1a1/mono.m3u8"},{"name":"Три Ангела","group":"💎 ĐẶC SẮC","logo":"","url":"http://hls.tv.3angels.ru/stream.m3u8"},{"name":"Центральное телевидение","group":"💎 ĐẶC SẮC","logo":"","url":"http://api.dommir.top/ch/ZTV/playlist.m3u8"},{"name":"Живи","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1419/tracks-v1a1/mono.m3u8"},{"name":"Живи Активно HD","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1405/tracks-v1a1/mono.m3u8"},{"name":"Живая Планета","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1250/tracks-v1a1/mono.m3u8"},{"name":"Живая природа","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1411/tracks-v1a1/mono.m3u8"},{"name":"Усадьба","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1427/tracks-v1a1/mono.m3u8"},{"name":"Успех","group":"💎 ĐẶC SẮC","logo":"","url":"http://flussonic.mkpnet.ru/tv-324fe9acc597fbc1/video.m3u8"},{"name":"Надежда","group":"💎 ĐẶC SẮC","logo":"","url":"http://live-tvhope.cdnvideo.ru/tvhope-pull/tvhope_1/playlist.m3u8"},{"name":"Красная линия","group":"💎 ĐẶC SẮC","logo":"","url":"http://s55766.cdn.ngenix.net/s55766-media-origin/rline_high/tracks-v1a1/mono.m3u8"},{"name":"АВТО 24","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1430/tracks-v1a1/mono.m3u8"},{"name":"Авто плюс","group":"💎 ĐẶC SẮC","logo":"","url":"http://stream8.cinerama.uz/1036/tracks-v1a1/mono.m3u8"},{"name":"GOLF CHANNEL","group":"🏆 THỂ THAO","logo":"","url":"https://dash.antik.sk/live/test_golf_channel/playlist.m3u8"},{"name":"Trace Sport Stars HD","group":"🏆 THỂ THAO","logo":"","url":"https://lightning-tracesport-samsungau.amagi.tv/playlist1080p.m3u8"},{"name":"T Sports 7","group":"🏆 THỂ THAO","logo":"","url":"https://live-us1.thaimomo.com/live-as/chtsport-1/playlist.m3u8"},{"name":"Матч!","group":"🏆 THỂ THAO","logo":"","url":"http://flussonic.mkpnet.ru/tv-d3098523a4409835/video.m3u8"},{"name":"Extreme Sports","group":"🏆 THỂ THAO","logo":"","url":"http://flussonic.mkpnet.ru/tv-1a9441fd32d63873/video.m3u8"},{"name":"Fast&FunBox","group":"🏆 THỂ THAO","logo":"","url":"https://dash.antik.sk/live/test_fast_and_funbox_medium_atk/playlist.m3u8"},{"name":"KHL Prime HD","group":"🏆 THỂ THAO","logo":"","url":"http://fs.uplink.kz/khl_prime/tracks-v1a1/mono.ts.m3u8?token=onlinetv"},{"name":"QAZSPORT","group":"🏆 THỂ THAO","logo":"","url":"http://fs.uplink.kz/qazsport_hd/mono.m3u8?token=onlinetv"},{"name":"Viju+ Sport","group":"🏆 THỂ THAO","logo":"","url":"http://stream8.cinerama.uz/1229/tracks-v1a1/mono.m3u8"},{"name":"Футбол","group":"🏆 THỂ THAO","logo":"","url":"http://radio.tvs.by/Setanta1/tracks-v1a1/mono.m3u8"},{"name":"Матч! Планета","group":"🏆 THỂ THAO","logo":"","url":"http://fs.uplink.kz/match_planeta/mono.m3u8?token=onlinetv"},{"name":"Матч! Премьер","group":"🏆 THỂ THAO","logo":"","url":"http://flussonic.mkpnet.ru/tv-ee3651e1e7ce5cbf/video.m3u8"},{"name":"Матч! Страна","group":"🏆 THỂ THAO","logo":"","url":"http://ukr.ukrainske.tv/134/keytvainua/video.m3u8"},{"name":"Спортивный","group":"🏆 THỂ THAO","logo":"","url":"http://live-3.otcnet.ru/sportivny/tracks-v1a1/mono.m3u8"},{"name":"Удар","group":"🏆 THỂ THAO","logo":"","url":"http://5.188.159.128:8070/udar/index.m3u8"},{"name":"VIETNAM TODAY HD","group":"📡 THIẾT YẾU","logo":"https://i.imgur.com/p9bWxfm.png","url":"https://live.fptplay53.net/fnxhd1/vntoday_vhls.smil/chunklist_b5000000.m3u8"},{"name":"ANTV - TH CÔNG AN NHÂN DÂN HD","group":"📡 THIẾT YẾU","logo":"https://i.imgur.com/nOb4rPT.png","url":"https://live.fptplay53.net/fnxhd2/anninhtv_vhls.smil/chunklist_b5000000.m3u8"},{"name":"QPVN - TH QUỐC PHÒNG VIỆT NAM HD","group":"📡 THIẾT YẾU","logo":"https://i.imgur.com/UIGZw0y.png","url":"https://live.fptplay53.net/fnxhd2/quocphongvnhd_vhls.smil/chunklist_b5000000.m3u8"},{"name":"CCTV4","group":"📡 THIẾT YẾU","logo":"","url":"https://dash.antik.sk/live/test_cctv_tizen/playlist.m3u8"},{"name":"Korean Central Television","group":"📡 THIẾT YẾU","logo":"","url":"https://kctv.koryofront.org/stream/index.m3u8"},{"name":"TVK","group":"📡 THIẾT YẾU","logo":"","url":"https://live.kh.malimarcdn.com/live/tvk.stream/playlist.m3u8"},{"name":"Первый канал.Всемирная сеть","group":"📡 THIẾT YẾU","logo":"","url":"http://cdn4.skygo.mn/live/disk1/ORt/HLSv3-FTA/ORt.m3u8"},{"name":"Россия РТР","group":"📡 THIẾT YẾU","logo":"","url":"http://fs.uplink.kz/rtr_planeta/mono.m3u8?token=onlinetv"},{"name":"НТВ Мир","group":"📡 THIẾT YẾU","logo":"","url":"http://fs.uplink.kz/ntv_mir/mono.m3u8?token=onlinetv"},{"name":"Пятый канал International","group":"📡 THIẾT YẾU","logo":"","url":"https://cdn4.skygo.mn/live/disk1/Channel_5/HLSv3-FTA/Channel_5.m3u8"},{"name":"Общественное Телевидение России","group":"📡 THIẾT YẾU","logo":"","url":"http://flussonic.mkpnet.ru/tv-22ed9087cd194d2b/video.m3u8"},{"name":"ТВ Центр","group":"📡 THIẾT YẾU","logo":"","url":"http://tvc-hls.cdnvideo.ru/tvc-res/smil:vd9221_2.smil/playlist.m3u8"},{"name":"Рен ТВ International","group":"📡 THIẾT YẾU","logo":"","url":"http://fs.uplink.kz/ren/mono.m3u8?token=onlinetv"},{"name":"Телеканал Звезда","group":"📡 THIẾT YẾU","logo":"","url":"http://tvzvezda.bonus-tv.ru/cdn/tvzvezda/playlist_hdhigh.m3u8"},{"name":"МИР","group":"📡 THIẾT YẾU","logo":"","url":"https://tvcdn01.oktv.kz/tv/mir/index.m3u8"},{"name":"Armenia 1 International","group":"📡 THIẾT YẾU","logo":"","url":"http://amtv.tulixcdn.com/amtv2/am2abr/tracks-v1a1/mono.m3u8"},{"name":"Qazaqstan KZ","group":"📡 THIẾT YẾU","logo":"","url":"http://fs.uplink.kz/qazaqstan/mono.m3u8?token=onlinetv"},{"name":"КТК","group":"📡 THIẾT YẾU","logo":"","url":"http://wz-kt.ktk.kz/ktklive/live.lq/playlist.m3u8"},{"name":"Хабар","group":"📡 THIẾT YẾU","logo":"","url":"http://fs.uplink.kz/habar/mono.m3u8?token=onlinetv"},{"name":"Leomax 24","group":"🛍️ MUA SẮM","logo":"","url":"http://tvshops.bonus-tv.ru:80/cdn/shop24/tracks-v1a1/mono.m3u8"},{"name":"Shopping Live","group":"🛍️ MUA SẮM","logo":"","url":"http://nonmirya7cc.a.trbcdn.net/livemaster/tzrz5_sazlypl5ot.smil/playlist.m3u8"},{"name":"Vitrina TV","group":"🛍️ MUA SẮM","logo":"","url":"http://v4.proofix.ru:80/vitrina-live/index.m3u8"},{"name":"МАГНАТ","group":"🛍️ MUA SẮM","logo":"","url":"http://s1.tv-nano.com/Magnat_HD_5119705/video.m3u8"},{"name":"Ювелирочка","group":"🛍️ MUA SẮM","logo":"","url":"http://live-uvelirochka.cdnvideo.ru/uvelirochka/uvelirochka_720p3/playlist.m3u8"},{"name":"Hà Nội FM90","group":"🧩 KÊNH KHÁC","logo":"","url":"https://cloudcdnfm90.tek4tv.vn/HANOIFM90/stream.m3u8"},{"name":"Hà Nội FM96","group":"🧩 KÊNH KHÁC","logo":"","url":"https://cloudcdnfm90.tek4tv.vn/HANOI96/stream.m3u8"},{"name":"BBC World Service Australasia","group":"🧩 KÊNH KHÁC","logo":"","url":"https://stream.live.vc.bbcmedia.co.uk/bbc_world_service_australasia"},{"name":"CGTN Radio","group":"🧩 KÊNH KHÁC","logo":"","url":"http://sk.cri.cn/am846.m3u8"},{"name":"CRI News Radio","group":"🧩 KÊNH KHÁC","logo":"","url":"http://sk.cri.cn/905.m3u8"},{"name":"KCBS1","group":"🧩 KÊNH KHÁC","logo":"","url":"https://kctv.koryofront.org/stream/kcradio1/index.m3u8"},{"name":"KCBS2","group":"🧩 KÊNH KHÁC","logo":"","url":"https://kctv.koryofront.org/stream/kcradio2/index.m3u8"},{"name":"Radio France Internationale","group":"🧩 KÊNH KHÁC","logo":"","url":"http://rfimonde96k.ice.infomaniak.ch/rfimonde-96k.mp3"},{"name":"Sputnik","group":"🧩 KÊNH KHÁC","logo":"","url":"http://icecast-rian.cdnvideo.ru/voicerushi"},{"name":"Вести FM","group":"🧩 KÊNH KHÁC","logo":"","url":"http://icecast.vgtrk.cdnvideo.ru/vestifm_mp3_64kbps"},{"name":"Маяк","group":"🧩 KÊNH KHÁC","logo":"","url":"http://icecast.vgtrk.cdnvideo.ru/mayakfm_mp3_64kbps"},{"name":"Радио Maximum","group":"🧩 KÊNH KHÁC","logo":"","url":"http://maximum.hostingradio.ru/maximum128.mp3"},{"name":"Радио Вера","group":"🧩 KÊNH KHÁC","logo":"","url":"http://radiovera.hostingradio.ru:8007/radiovera_128"},{"name":"Радио DFM","group":"🧩 KÊNH KHÁC","logo":"","url":"http://dfm.hostingradio.ru/dfm128.mp3"},{"name":"Радио Хит FM","group":"🧩 KÊNH KHÁC","logo":"","url":"http://hitfm.hostingradio.ru/hitfm128.mp3"},{"name":"Радио Сибирь","group":"🧩 KÊNH KHÁC","logo":"","url":"http://stream.radiosibir.ru:8090/om2"},{"name":"Радио Шансон","group":"🧩 KÊNH KHÁC","logo":"","url":"http://89.204.58.59:8000/ch_72_01"},{"name":"Ретро FM","group":"🧩 KÊNH KHÁC","logo":"","url":"http://retroserver.streamr.ru:8043/retro128"},{"name":"Авторадио","group":"🧩 KÊNH KHÁC","logo":"","url":"http://89.204.58.59:8000/ar_72_01"},{"name":"Радио Европа Плюс","group":"🧩 KÊNH KHÁC","logo":"","url":"http://ep128.hostingradio.ru:8030/ep128"},{"name":"Русское Радио","group":"🧩 KÊNH KHÁC","logo":"","url":"http://rusradio.hostingradio.ru/rusradio128.mp3"},{"name":"Новое Радио","group":"🧩 KÊNH KHÁC","logo":"","url":"http://icecast.newradio.cdnvideo.ru/newradio3"},{"name":"CJB SBS","group":"🇰🇷 HÀN QUỐC","logo":"","url":"http://1.222.207.80:1935/live/cjbtv/playlist.m3u8"},{"name":"G1 SBS","group":"🇰🇷 HÀN QUỐC","logo":"","url":"http://61.82.49.4:1935/live/_definst_/tv.stream/playlist.m3u8"},{"name":"MBC","group":"🇰🇷 HÀN QUỐC","logo":"","url":"https://ns1.tjmbc.co.kr/live/myStream.sdp/chunklist_w1392208922.m3u8"},{"name":"MBC Chuncheon","group":"🇰🇷 HÀN QUỐC","logo":"","url":"https://stream.chmbc.co.kr/TV/myStream/playlist.m3u8"},{"name":"MBC Chungbuk","group":"🇰🇷 HÀN QUỐC","logo":"","url":"http://211.33.246.4:32954/cj_live/myStream.sdp/playlist.m3u8"},{"name":"MBC Daegu","group":"🇰🇷 HÀN QUỐC","logo":"","url":"https://5ee1ec6f32118.streamlock.net/live/livetv/playlist.m3u8"},{"name":"MBC Jeju","group":"🇰🇷 HÀN QUỐC","logo":"","url":"https://wowza.jejumbc.com/live/tv_jejumbc/playlist.m3u8"},{"name":"MBC Mokpo","group":"🇰🇷 HÀN QUỐC","logo":"","url":"http://vod.mpmbc.co.kr:1935/live/encoder-tv/playlist.m3u8"},{"name":"MBC Yeosu","group":"🇰🇷 HÀN QUỐC","logo":"","url":"https://5c3639aa99149.streamlock.net/live_TV/tv/playlist.m3u8"},{"name":"EBS1","group":"🇰🇷 HÀN QUỐC","logo":"","url":"https://ebsonair.ebs.co.kr/ebs1familypc/familypc1m/playlist.m3u8"},{"name":"EBS2","group":"🇰🇷 HÀN QUỐC","logo":"","url":"https://ebsonair.ebs.co.kr/ebs2familypc/familypc1m/playlist.m3u8"},{"name":"EBS E","group":"🇰🇷 HÀN QUỐC","logo":"","url":"https://ebsonair.ebs.co.kr/plus3familypc/familypc1m/playlist.m3u8"},{"name":"EBS Kids","group":"🇰🇷 HÀN QUỐC","logo":"","url":"https://ebsonair.ebs.co.kr/ebsufamilypc/familypc1m/playlist.m3u8"},{"name":"EBS+1","group":"🇰🇷 HÀN QUỐC","logo":"","url":"https://ebsonair.ebs.co.kr/plus1familypc/familypc1m/playlist.m3u8"},{"name":"EBS+2","group":"🇰🇷 HÀN QUỐC","logo":"","url":"https://ebsonair.ebs.co.kr/plus2familypc/familypc1m/playlist.m3u8"},{"name":"TV Chosun","group":"🇰🇷 HÀN QUỐC","logo":"","url":"http://onair.cdn.tvchosun.com/origin1/_definst_/tvchosun_s1/playlist.m3u8"},{"name":"TVN","group":"🇰🇷 HÀN QUỐC","logo":"","url":"http://onair2.cdn.tvchosun.com/origin2/_definst_/tvchosun_s3/playlist.m3u8"},{"name":"BLV Chim Nhỏ","group":"🚀 KÊNH MỚI","logo":"","url":"https://luong.phaohoa.live/live/phaohoa5/index.m3u8"},{"name":"BLV KaKa","group":"🚀 KÊNH MỚI","logo":"","url":"https://luong.phaohoa.live/live/phaohoa6/index.m3u8"},{"name":"BLV A Heo","group":"🚀 KÊNH MỚI","logo":"","url":"https://luong.phaohoa.live/live/phaohoa7/index.m3u8"},{"name":"BLV Tày","group":"🚀 KÊNH MỚI","logo":"","url":"https://luong.phaohoa.live/live/phaohoa8/index.m3u8"}];
+
+  const normalize = s => String(s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .trim();
+
+  let list = base.map(c => {
+    const name = String(c.name || "");
+    const n = normalize(name);
+    const g = normalize(c.group);
+
+    // LSTV: luôn thuộc Địa phương.
+    if (n === "LSTV" || n.startsWith("LSTV")) {
+      return { ...c, group: "📍 ĐỊA PHƯƠNG" };
+    }
+
+    // Kênh từng nằm trong Yêu thích: chuyển về Quốc tế.
+    if (g.includes("YEU THICH")) {
+      return { ...c, group: "🌏 QUỐC TẾ" };
+    }
+
+    // VTVCab: đưa vào nhóm nội dung phù hợp.
+    if (g.includes("VTVCAB")) {
+      if (n.includes("BIBI") || n.includes("KIDS")) return { ...c, group: "🧸 THIẾU NHI" };
+      if (n.includes("CINE") || n.includes("MOVIES") || n.includes("DRAMAS")) return { ...c, group: "🎞️ PHIM TRUYỆN" };
+      if (n.includes("MUSIC")) return { ...c, group: "🎧 CA NHẠC" };
+      if (n.includes("O2TV")) return { ...c, group: "🎯 TỔNG HỢP" };
+      return { ...c, group: "🎭 GIẢI TRÍ" };
+    }
+
+    // Các nhóm hiện trong nguồn nhưng thực chất là nội dung quốc tế.
+    if (
+      g.includes("QUOC TE VIP") ||
+      g.includes("QUOC TE") ||
+      g === "IN THE BOX" ||
+      g === "TONG HOP" ||
+      g === "TIN TUC" ||
+      g === "THIEU NHI" ||
+      g === "CA NHAC" ||
+      g === "DAC SAC" ||
+      g === "THE THAO" ||
+      g === "HAN QUOC" ||
+      g === "MUA SAM"
+    ) {
+      return { ...c, group: "🌏 QUỐC TẾ" };
+    }
+
+    // Phim / giải trí: giữ ON Vie; phần còn lại là kênh quốc tế.
+    if (g === "PHIM TRUYEN" || g === "GIAI TRI") {
+      if (!n.includes("ON VIE")) return { ...c, group: "🌏 QUỐC TẾ" };
+    }
+
+    // Thiết yếu: chỉ giữ các kênh Việt Nam.
+    if (g === "THIET YEU") {
+      const vn = /VIETNAM TODAY|ANTV|QPVN|VIET NAM/.test(n);
+      if (!vn) return { ...c, group: "🌏 QUỐC TẾ" };
+    }
+
+    // Kênh khác: chỉ giữ Hà Nội FM; radio quốc tế chuyển sang Quốc tế.
+    if (g === "KENH KHAC" && !n.startsWith("HA NOI FM")) {
+      return { ...c, group: "🌏 QUỐC TẾ" };
+    }
+
+    return c;
+  });
+
+  return list;
+})();
+
+const GROUP_PRIORITY = [
+  {keys:["YÊU THÍCH","YEU THICH"], label:"YÊU THÍCH"},
+  {keys:["VTV"], label:"VTV"},
+  {keys:["DIA PHUONG"], label:"ĐỊA PHƯƠNG"},
+  {keys:["HTV"], label:"HTV"},
+  {keys:["SCTV"], label:"SCTV"},
+  {keys:["TONG HOP"], label:"TỔNG HỢP"},
+  {keys:["THE THAO"], label:"THỂ THAO"},
+  {keys:["QUOC TE"], label:"QUỐC TẾ"}
+];
+
+function normalizeGroupName(s){
+  return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim();
 }
-function showError(title,text){
-  document.getElementById('errorTitle').textContent=title;
-  document.getElementById('errorText').textContent=text;
-  document.getElementById('streamError').classList.add('show');
-  statusEl.textContent=title;
+
+function groupRank(g){
+  const n=normalizeGroupName(g);
+  for(let i=0;i<GROUP_PRIORITY.length;i++){
+    if(GROUP_PRIORITY[i].keys.some(k=>normalizeGroupName(k)===n || n.includes(normalizeGroupName(k)))) return i;
+  }
+  return 100;
 }
-function hideError(){document.getElementById('streamError').classList.remove('show')}
-function cleanup(){
-  if(hls){hls.destroy();hls=null}
-  video.pause(); video.removeAttribute('src'); video.load();
+
+const FAVORITE_STORAGE_KEY="son-tv-favorites-v1";
+
+function channelKey(c){
+  return String(c.url || c.name || "");
 }
-function play(i){
-  const c=channels[i]; if(!c)return;
-  active=i; render(); hideError(); nowName.textContent=c.name; statusEl.textContent='Đang kết nối…';
-  cleanup();
-  if(/^http:\/\//i.test(c.url) && location.protocol==='https:'){
-    showError('Nguồn HTTP bị trình duyệt chặn','Trang đang chạy HTTPS nhưng stream dùng HTTP. Browser sẽ chặn mixed content.');
+
+function findLSTV(){
+  return CHANNELS.find(c=>{
+    const n=String(c.name||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+    return n==="LSTV" || n.startsWith("LSTV");
+  });
+}
+
+function loadFavoriteKeys(){
+  try{
+    const raw=localStorage.getItem(FAVORITE_STORAGE_KEY);
+    if(raw!==null){
+      const arr=JSON.parse(raw);
+      return new Set(Array.isArray(arr) ? arr.map(String) : []);
+    }
+  }catch(e){}
+  const set=new Set();
+  const lstv=findLSTV();
+  if(lstv) set.add(channelKey(lstv)); // giữ LSTV làm yêu thích mặc định
+  try{localStorage.setItem(FAVORITE_STORAGE_KEY,JSON.stringify([...set]));}catch(e){}
+  return set;
+}
+
+let favoriteKeys=loadFavoriteKeys();
+
+function saveFavoriteKeys(){
+  try{localStorage.setItem(FAVORITE_STORAGE_KEY,JSON.stringify([...favoriteKeys]));}catch(e){}
+}
+
+function isFavorite(c){
+  return favoriteKeys.has(channelKey(c));
+}
+
+function favoriteChannels(){
+  return CHANNELS.filter(c=>favoriteKeys.has(channelKey(c)));
+}
+
+let hls=null;
+
+const GROUPS=[...new Set([...CHANNELS.map(x=>x.group),"❤️ YÊU THÍCH"])]
+  .sort((a,b)=>{
+    const ra=groupRank(a), rb=groupRank(b);
+    if(ra!==rb) return ra-rb;
+    return normalizeGroupName(a).localeCompare(normalizeGroupName(b),"vi");
+  });
+
+function channelOrder(c){
+  const n = c.name.toUpperCase().replace(/[^A-Z0-9]/g,"");
+  const g = normalizeGroupName(c.group);
+
+  // LSTV lên đầu trong nhóm Địa phương.
+  if(g.includes("DIA PHUONG") && (n === "LSTV" || n.startsWith("LSTV"))){
+    return [-1, 0, 0, n];
+  }
+
+  if(g === "DIA PHUONG" && (n === "LSTV" || n.startsWith("LSTV"))){
+    return [-1, 0, 0, n];
+  }
+
+  const m = n.match(/^VTV(\d{1,2})/);
+  if(m){
+    const num = Number(m[1]);
+    const hd = /HD/.test(n) ? 1 : 0;
+    return [0, num, hd, n];
+  }
+  return [1, 999, 0, n];
+}
+
+function sortChannels(list){
+  return [...list].sort((a,b)=>{
+    const A=channelOrder(a), B=channelOrder(b);
+    for(let i=0;i<A.length;i++){
+      if(A[i]<B[i]) return -1;
+      if(A[i]>B[i]) return 1;
+    }
+    return 0;
+  });
+}
+const META={"📺 VTV": ["📺", "VTV"], "❤️ YÊU THÍCH": ["❤️", "YÊU THÍCH"], "🌐 QUỐC TẾ VIP": ["🌏", "QUỐC TẾ VIP"], "📦 IN THE BOX": ["📺", "IN THE BOX"], "🔴 HTV • HTVC": ["📺", "HTV • HTVC"], "📺 SCTV": ["📺", "SCTV"], "📡 VTVcab": ["📺", "VTVcab"], "📍 ĐỊA PHƯƠNG": ["📍", "ĐỊA PHƯƠNG"], "🎟️ SỰ KIỆN": ["📺", "SỰ KIỆN"], "🎯 TỔNG HỢP": ["📺", "TỔNG HỢP"], "🎭 GIẢI TRÍ": ["🎭", "GIẢI TRÍ"], "🎞️ PHIM TRUYỆN": ["🎬", "PHIM TRUYỆN"], "🧸 THIẾU NHI": ["🧸", "THIẾU NHI"], "🗞️ TIN TỨC": ["📰", "TIN TỨC"], "🎧 CA NHẠC": ["🎵", "CA NHẠC"], "💎 ĐẶC SẮC": ["📺", "ĐẶC SẮC"], "🏆 THỂ THAO": ["🏆", "THỂ THAO"], "📡 THIẾT YẾU": ["📺", "THIẾT YẾU"], "🛍️ MUA SẮM": ["📺", "MUA SẮM"], "🧩 KÊNH KHÁC": ["📺", "KÊNH KHÁC"], "🇰🇷 HÀN QUỐC": ["🌏", "HÀN QUỐC"], "🚀 KÊNH MỚI": ["📺", "KÊNH MỚI"]};
+let currentGroup=(GROUPS.find(g=>normalizeGroupName(g)==="VTV")||GROUPS[0]||"");
+function groupLabel(g){const m=META[g]||["📺",g];return `${m[0]} ${m[1]}`}
+function renderGroups(){document.getElementById("groups").innerHTML=GROUPS.map(g=>`<div class="gitem ${g===currentGroup?"active":""}" onclick='selectGroup(${JSON.stringify(g)})'><span class="gicon">${META[g]?.[0]||"📺"}</span><span>${META[g]?.[1]||g}</span></div>`).join("")}
+function renderTabs(){document.getElementById("tabs").innerHTML=GROUPS.map(g=>`<button class="tab ${g===currentGroup?"active":""}" onclick='selectGroup(${JSON.stringify(g)})'>${groupLabel(g)}</button>`).join("")}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+function normalizeSearchText(s){
+  return String(s||"")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase()
+    .trim();
+}
+
+function matchesChannelSearch(c,q){
+  const name=normalizeSearchText(c.name);
+  const group=normalizeSearchText(c.group);
+  return name.includes(q)||group.includes(q);
+}
+
+function renderChannels(){
+  const q=normalizeSearchText(document.getElementById("search").value);
+  let list;
+
+  if(q){
+    // Tìm trên toàn bộ danh sách; số được khớp chính xác.
+    list=sortChannels(CHANNELS.filter(c=>matchesChannelSearch(c,q)));
+  }else if(currentGroup==="❤️ YÊU THÍCH"){
+    list=sortChannels(favoriteChannels());
+  }else{
+    list=sortChannels(CHANNELS.filter(c=>c.group===currentGroup));
+  }
+
+  const box=document.getElementById("channels");
+  if(!list.length){
+    box.innerHTML='<div class="empty">🔎 Không tìm thấy kênh phù hợp.</div>';
     return;
   }
-  const hlsUrl=isHlsUrl(c.url);
-  if(hlsUrl && window.Hls && Hls.isSupported()){
-    hls=new Hls({enableWorker:true,lowLatencyMode:true,backBufferLength:30,manifestLoadingTimeOut:12000,levelLoadingTimeOut:12000,fragLoadingTimeOut:15000});
-    hls.on(Hls.Events.ERROR,(event,data)=>{
-      if(!data.fatal)return;
-      let msg='Không thể tải stream.';
-      if(data.type===Hls.ErrorTypes.NETWORK_ERROR) msg='Không tải được stream. Có thể nguồn đang offline, 403 hoặc CORS không cho phép.';
-      else if(data.type===Hls.ErrorTypes.MEDIA_ERROR) msg='Stream đã tải nhưng trình duyệt không giải mã được định dạng này.';
-      else msg='HLS gặp lỗi nghiêm trọng khi phát stream.';
-      try{hls.destroy()}catch(e){} hls=null; showError('Không phát được kênh',msg);
-    });
-    hls.on(Hls.Events.MANIFEST_PARSED,()=>{
-      statusEl.textContent='Đã kết nối — đang phát';
-      video.play().catch(()=>{statusEl.textContent='Đã tải stream — bấm ▶ để phát';});
-    });
-    hls.loadSource(c.url); hls.attachMedia(video);
-  }else if(video.canPlayType('application/vnd.apple.mpegurl')){
-    video.src=c.url;
-    video.addEventListener('loadedmetadata',()=>{statusEl.textContent='Đã kết nối — đang phát';video.play().catch(()=>{statusEl.textContent='Đã tải stream — bấm ▶ để phát'})},{once:true});
-    video.addEventListener('error',()=>showError('Không phát được kênh','Safari không tải được nguồn HLS. Kiểm tra URL, CORS hoặc trạng thái máy chủ.'),{once:true});
-    video.load();
-  }else if(/\.(mp4|webm|ogg)(?:$|[?#])/i.test(c.url)){
-    video.src=c.url;
-    video.addEventListener('loadedmetadata',()=>{statusEl.textContent='Đã kết nối — đang phát';video.play().catch(()=>{statusEl.textContent='Đã tải video — bấm ▶ để phát'})},{once:true});
-    video.addEventListener('error',()=>showError('Không phát được video','Định dạng video không được trình duyệt hỗ trợ hoặc server đã chặn truy cập.'),{once:true});
-    video.load();
+
+  box.innerHTML=list.map(c=>{
+    const idx=CHANNELS.indexOf(c);
+    const active=isFavorite(c);
+    return `
+      <div class="channel" onclick="playChannel(${idx})" title="${esc(c.name)}">
+        <button class="fav-btn ${active?"active":""}" type="button"
+          onclick="toggleFavorite(event,${idx})"
+          aria-label="${active?"Bỏ khỏi yêu thích":"Thêm vào yêu thích"}"
+          title="${active?"Bỏ khỏi yêu thích":"Thêm vào yêu thích"}">${active?"♥":"♡"}</button>
+        <div class="logo">
+          ${c.logo?`<img src="${esc(c.logo)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">`:""}
+          <div class="fallback" style="display:${c.logo?"none":"block"}">📺</div>
+        </div>
+        <div class="cname">${esc(c.name)}</div>
+      </div>`;
+  }).join("");
+}
+
+function toggleFavorite(event,index){
+  if(event) event.stopPropagation();
+  const c=CHANNELS[index];
+  if(!c) return;
+
+  const key=channelKey(c);
+  if(favoriteKeys.has(key)) favoriteKeys.delete(key);
+  else favoriteKeys.add(key);
+
+  saveFavoriteKeys();
+  renderGroups();
+  renderTabs();
+  renderChannels();
+}
+
+function selectGroup(g){
+  currentGroup=g;
+  renderGroups();
+  renderTabs();
+  renderChannels();
+}
+
+function resetQualityOptions(disabled=true){
+  const select=document.getElementById("qualitySelect");
+  if(!select) return;
+  select.innerHTML='<option value="-1">Tự động</option>';
+  select.disabled=disabled;
+}
+
+function setupQualitySelector(){
+  const select=document.getElementById("qualitySelect");
+  if(!select) return;
+
+  select.onchange=function(){
+    if(!hls) return;
+    const level=Number(this.value);
+    if(Number.isNaN(level)) return;
+    hls.currentLevel=level;
+  };
+}
+
+function populateQualityLevels(){
+  const select=document.getElementById("qualitySelect");
+  if(!select||!hls) return;
+
+  const seen=new Set();
+  const options=[{value:"-1",label:"Tự động"}];
+
+  hls.levels.forEach((level,index)=>{
+    const height=Number(level.height||0);
+    const bitrate=Number(level.bitrate||0);
+    const label=height?`${height}p`:bitrate?`${Math.round(bitrate/1000)} kbps`:`Mức ${index+1}`;
+    if(seen.has(label)) return;
+    seen.add(label);
+    options.push({value:String(index),label});
+  });
+
+  options.sort((a,b)=>{
+    if(a.value===" -1" || a.value==="-1") return -1;
+    if(b.value===" -1" || b.value==="-1") return 1;
+    return Number(b.label.replace(/[^0-9]/g,""))-Number(a.label.replace(/[^0-9]/g,""));
+  });
+
+  select.innerHTML=options.map(o=>`<option value="${o.value}">${o.label}</option>`).join("");
+  select.disabled=options.length<=1;
+  select.value="-1";
+}
+
+function playChannel(i){
+  const c=CHANNELS[i];
+  if(!c) return;
+
+  const video=document.getElementById("player");
+  const title=document.getElementById("playerTitle");
+  const hint=document.getElementById("hint");
+
+  title.textContent="▶ "+c.name;
+  hint.textContent="Đang phát: "+c.name;
+
+  if(hls){hls.destroy();hls=null}
+  resetQualityOptions(true);
+
+  video.pause();
+  video.removeAttribute("src");
+  video.load();
+
+  if(c.url.includes(".m3u8")){
+    if(video.canPlayType("application/vnd.apple.mpegurl")){
+      // Safari/iPhone: native HLS; browser quyết định variant.
+      video.src=c.url;
+      resetQualityOptions(true);
+      video.play().catch(()=>{});
+    }else if(window.Hls&&Hls.isSupported()){
+      hls=new Hls({
+        enableWorker:true,
+        capLevelToPlayerSize:false
+      });
+      hls.loadSource(c.url);
+      hls.attachMedia(video);
+
+      hls.on(Hls.Events.MANIFEST_PARSED,()=>{
+        populateQualityLevels();
+        video.play().catch(()=>{});
+      });
+
+      hls.on(Hls.Events.ERROR,(event,data)=>{
+        if(data&&data.fatal){
+          hint.textContent="Không phát được kênh: "+c.name;
+        }
+      });
+    }else{
+      alert("Trình duyệt này không hỗ trợ HLS.");
+    }
+  }else if(c.url.includes(".mpd")){
+    hint.textContent="Kênh này dùng MPEG-DASH/DRM; chất lượng phụ thuộc trình phát.";
+    alert("Kênh này dùng MPEG-DASH/DRM; trình phát web có thể không phát được nếu máy chủ yêu cầu DRM.");
   }else{
-    showError('Nguồn stream không phù hợp với web','URL này không phải HLS/MP4 mà trình duyệt có thể phát trực tiếp. Nếu đây là IPTV, cần URL .m3u8 hoặc một web-compatible stream.');
+    video.src=c.url;
+    resetQualityOptions(true);
+    video.play().catch(()=>{});
   }
 }
-async function load(){active=-1;group='Tất cả';channelsEl.innerHTML='<div class="status" style="padding:12px">Đang tải playlist…</div>';statusEl.textContent='Đang tải danh sách kênh…';try{const r=await fetch(M3U_URL,{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);channels=parse(await r.text());renderGroups();render();statusEl.textContent=channels.length?`Đã tải ${channels.length} kênh`:'Playlist không có kênh hợp lệ';}catch(e){channels=[];renderGroups();render();statusEl.textContent='Không tải được M3U. Kiểm tra URL hoặc CORS.';channelsEl.innerHTML='<div class="status" style="padding:12px">Không tải được playlist M3U.<br><br>Kiểm tra CORS của file M3U và các stream.</div>';console.warn(e)}}
-search.addEventListener('input',render);document.getElementById('reload').onclick=load;document.getElementById('retry').onclick=()=>{if(active>=0)play(active)};document.getElementById('openM3U').onclick=()=>window.open(M3U_URL,'_blank');document.getElementById('copyM3U').onclick=async()=>{await navigator.clipboard.writeText(M3U_URL);document.getElementById('copyM3U').textContent='Đã copy';setTimeout(()=>document.getElementById('copyM3U').textContent='Copy M3U',1200)};load();
+
+
+function jdFromDate(dd,mm,yy){
+  const a=Math.floor((14-mm)/12);
+  const y=yy+4800-a;
+  const m=mm+12*a-3;
+  let jd=dd+Math.floor((153*m+2)/5)+365*y+Math.floor(y/4)-Math.floor(y/100)+Math.floor(y/400)-32045;
+  if(jd<2299161){
+    jd=dd+Math.floor((153*m+2)/5)+365*y+Math.floor(y/4)-32083;
+  }
+  return jd;
+}
+
+function newMoon(k){
+  const T=k/1236.85;
+  const T2=T*T, T3=T2*T, dr=Math.PI/180;
+  let Jd1=2415020.75933+29.53058868*k+0.0001178*T2-0.000000155*T3;
+  Jd1+=0.00033*Math.sin((166.56+132.87*T-0.009173*T2)*dr);
+  const M=359.2242+29.10535608*k-0.0000333*T2-0.00000347*T3;
+  const Mpr=306.0253+385.81691806*k+0.0107306*T2+0.00001236*T3;
+  const F=21.2964+390.67050646*k-0.0016528*T2-0.00000239*T3;
+  let C1=(0.1734-0.000393*T)*Math.sin(M*dr)
+       +0.0021*Math.sin(2*M*dr)
+       -0.4068*Math.sin(Mpr*dr)
+       +0.0161*Math.sin(2*Mpr*dr)
+       -0.0004*Math.sin(3*Mpr*dr)
+       +0.0104*Math.sin(2*F*dr)
+       -0.0051*Math.sin((M+Mpr)*dr)
+       -0.0074*Math.sin((M-Mpr)*dr)
+       +0.0004*Math.sin((2*F+M)*dr)
+       -0.0004*Math.sin((2*F-M)*dr)
+       -0.0006*Math.sin((2*F+Mpr)*dr)
+       +0.0010*Math.sin((2*F-Mpr)*dr)
+       +0.0005*Math.sin((2*Mpr+M)*dr);
+  let deltat;
+  if(T< -11){
+    deltat=0.001+0.000839*T+0.0002261*T2-0.00000845*T3-0.000000081*T*T3;
+  }else{
+    deltat=-0.000278+0.000265*T+0.000262*T2;
+  }
+  const JdNew=Jd1+C1-deltat;
+  return Math.floor(JdNew+0.5);
+}
+
+function getSunLongitude(jdn){
+  const T=(jdn-2451545.5)/36525;
+  const T2=T*T;
+  const dr=Math.PI/180;
+  const M=357.52910+35999.05030*T-0.0001559*T2-0.00000048*T2*T;
+  const L0=280.46645+36000.76983*T+0.0003032*T2;
+  let DL=(1.914600-0.004817*T-0.000014*T2)*Math.sin(dr*M);
+  DL+=(0.019993-0.000101*T)*Math.sin(2*dr*M)+0.000290*Math.sin(3*dr*M);
+  let L=L0+DL;
+  L=(L*dr)% (2*Math.PI);
+  if(L<0)L+=2*Math.PI;
+  return Math.floor(L/dr/30);
+}
+
+function getNewMoonDay(k,timeZone){
+  return newMoon(k)+timeZone/24;
+}
+
+function getLunarMonth11(yy,timeZone){
+  const off=jdFromDate(31,12,yy)-2415021;
+  const k=Math.floor(off/29.530588853);
+  let nm=getNewMoonDay(k,timeZone);
+  const sunLong=getSunLongitude(nm);
+  if(sunLong>=9) nm=getNewMoonDay(k-1,timeZone);
+  return nm;
+}
+
+function getLeapMonthOffset(a11,timeZone){
+  const k=Math.floor((a11-2415021.076998695)/29.530588853+0.5);
+  let last=0, i=1;
+  let arc=getSunLongitude(getNewMoonDay(k+i,timeZone));
+  do{
+    last=arc;
+    i++;
+    arc=getSunLongitude(getNewMoonDay(k+i,timeZone));
+  }while(arc!==last && i<14);
+  return i-1;
+}
+
+function convertSolar2Lunar(dd,mm,yy,timeZone){
+  const dayNumber=jdFromDate(dd,mm,yy);
+  let k=Math.floor((dayNumber-2415021.076998695)/29.530588853);
+  let monthStart=getNewMoonDay(k+1,timeZone);
+  if(monthStart>dayNumber) monthStart=getNewMoonDay(k,timeZone);
+
+  let a11=getLunarMonth11(yy,timeZone);
+  let b11=a11;
+  let lunarYear;
+
+  if(a11>=monthStart){
+    lunarYear=yy;
+    a11=getLunarMonth11(yy-1,timeZone);
+  }else{
+    lunarYear=yy+1;
+    b11=getLunarMonth11(yy+1,timeZone);
+  }
+
+  const lunarDay=Math.floor(dayNumber-monthStart+1);
+  const diff=Math.floor((monthStart-a11)/29);
+  let lunarLeap=0;
+  let lunarMonth=diff+11;
+
+  if(b11-a11>365){
+    const leapMonthDiff=getLeapMonthOffset(a11,timeZone);
+    if(diff>=leapMonthDiff){
+      lunarMonth=diff+10;
+      if(diff===leapMonthDiff) lunarLeap=1;
+    }
+  }
+  if(lunarMonth>12) lunarMonth-=12;
+  if(lunarMonth>=11 && diff<4) lunarYear-=1;
+
+  return [lunarDay,lunarMonth,lunarYear,lunarLeap];
+}
+
+function renderCurrentDate(){
+  const now=new Date();
+  const days=["Chủ nhật","Thứ hai","Thứ ba","Thứ tư","Thứ năm","Thứ sáu","Thứ bảy"];
+  const dd=String(now.getDate()).padStart(2,"0");
+  const mm=String(now.getMonth()+1).padStart(2,"0");
+  const yy=now.getFullYear();
+  const tz=-now.getTimezoneOffset()/60;
+  const lunar=convertSolar2Lunar(now.getDate(),now.getMonth()+1,yy,tz);
+
+  const solarEl=document.getElementById("solarDate");
+  const weekEl=document.getElementById("statusWeekday");
+  const lunarEl=document.getElementById("lunarDate");
+
+  if(solarEl) solarEl.textContent=`${dd}/${mm}/${yy}`;
+  if(weekEl) weekEl.textContent=days[now.getDay()];
+  if(lunarEl) lunarEl.textContent=`🌙 Âm lịch · ${String(lunar[0]).padStart(2,"0")}/${String(lunar[1]).padStart(2,"0")}/${lunar[2]}`;
+}
+
+function updateStatusClock(){
+  const now=new Date();
+  const el=document.getElementById("statusTime");
+  if(!el) return;
+  el.textContent=[now.getHours(),now.getMinutes(),now.getSeconds()]
+    .map(v=>String(v).padStart(2,"0")).join(":");
+}
+
+function startStatusClock(){
+  renderCurrentDate();
+  updateStatusClock();
+  setInterval(()=>{
+    updateStatusClock();
+    renderCurrentDate();
+  },1000);
+}
+
+
+setupQualitySelector();
+renderGroups();renderTabs();renderChannels();renderCurrentDate();startStatusClock();
 </script>
-</body></html>
+</body>
+</html>
