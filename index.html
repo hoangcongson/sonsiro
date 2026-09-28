@@ -19,7 +19,7 @@ header{height:72px;display:flex;align-items:center;justify-content:space-between
 .now{padding:13px 15px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;gap:10px}.now-name{font-size:12px;font-weight:800}.live{display:inline-flex;align-items:center;gap:6px;color:#ff6576;font-size:8px;border:1px solid rgba(255,101,118,.3);border-radius:12px;padding:5px 8px}.live i{width:5px;height:5px;border-radius:50%;background:#ff6576;box-shadow:0 0 8px #ff6576}
 .list-head{padding:13px 14px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between}.list-head strong{font-size:12px}.count{color:#7890a4;font-size:8px}.search{margin:11px 12px 8px;width:calc(100% - 24px);padding:10px 11px;border-radius:9px;border:1px solid rgba(255,255,255,.09);outline:0;background:rgba(0,0,0,.2);color:#fff;font-size:10px}.search:focus{border-color:rgba(37,197,255,.55)}.groups{display:flex;gap:6px;overflow:auto;padding:0 12px 9px;scrollbar-width:none}.groups::-webkit-scrollbar{display:none}.group{white-space:nowrap;padding:6px 9px;border-radius:15px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);color:#91a7b9;font-size:8px;cursor:pointer}.group.active{color:#fff;border-color:rgba(37,197,255,.5);background:rgba(37,197,255,.1)}.channels{height:calc(100vh - 285px);min-height:330px;overflow:auto;padding:0 8px 10px}.channel{width:100%;display:flex;align-items:center;gap:10px;text-align:left;border:1px solid transparent;border-radius:10px;background:transparent;color:#d9e6f1;padding:9px 8px;cursor:pointer}.channel:hover{background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.07)}.channel.active{background:linear-gradient(90deg,rgba(37,197,255,.13),rgba(79,100,255,.06));border-color:rgba(37,197,255,.32)}.icon{width:38px;height:38px;flex:none;border-radius:9px;display:grid;place-items:center;background:#0a263c;border:1px solid rgba(37,197,255,.15);overflow:hidden;color:#55cfff;font-size:8px;font-weight:900}.icon img{width:100%;height:100%;object-fit:contain;background:#fff}.channel-name{font-size:10px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.channel-group{font-size:7px;color:#71899c;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bottom{margin:14px 0 30px;display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:rgba(5,18,30,.72)}.source{font-size:9px;color:#8299aa}.source a{color:#59d2ff;word-break:break-all}.actions{display:flex;gap:7px}
-.status{font-size:9px;color:#7f96a8;margin-top:7px;min-height:15px}
+.status{font-size:9px;color:#7f96a8;margin-top:7px;min-height:15px}.stream-error{display:none;position:absolute;inset:0;z-index:5;align-items:center;justify-content:center;flex-direction:column;gap:10px;text-align:center;padding:25px;background:linear-gradient(180deg,rgba(2,7,13,.25),rgba(2,7,13,.9));backdrop-filter:blur(3px)}.stream-error.show{display:flex}.stream-error strong{font-size:16px}.stream-error span{max-width:480px;color:#9fb2c4;font-size:10px;line-height:1.6}.screen{position:relative}
 @media(max-width:900px){.tv{grid-template-columns:1fr}.channels{height:430px}.screen{min-height:0}.m3u code{display:none}.hero h1{font-size:30px}.bottom{flex-direction:column;align-items:flex-start}}
 @media(max-width:560px){.wrap{width:min(100% - 18px,1450px)}header{height:62px}.brand small{display:none}.m3u{display:none}.hero{padding-top:18px}.hero h1{font-size:27px}.screen{aspect-ratio:16/10}.channels{height:390px}}
 </style>
@@ -34,7 +34,8 @@ header{height:72px;display:flex;align-items:center;justify-content:space-between
 <main class="tv">
   <section class="player-card">
     <div class="screen">
-      <video id="video" controls playsinline preload="metadata"></video>
+      <video id="video" controls playsinline preload="metadata" crossorigin="anonymous"></video>
+      <div class="stream-error" id="streamError"><strong id="errorTitle">Không phát được kênh</strong><span id="errorText">Kiểm tra nguồn stream.</span><button class="btn" id="retry">↻ Thử lại</button></div>
       <div class="empty" id="empty"><div class="empty-box"><div class="play">▶</div><strong>Chọn một kênh để xem</strong><span>Playlist M3U đang được tải...</span></div></div>
     </div>
     <div class="now"><div><div class="now-name" id="nowName">Chưa chọn kênh</div><div class="status" id="status">Đang tải danh sách kênh…</div></div><span class="live"><i></i> LIVE</span></div>
@@ -56,8 +57,59 @@ function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function parse(text){const lines=text.replace(/\r/g,'').split('\n'),out=[];let meta=null;for(const raw of lines){const line=raw.trim();if(line.startsWith('#EXTINF:')){const name=(line.split(',').slice(1).join(',')||'Kênh').trim();const logo=(line.match(/tvg-logo=["']([^"']*)["']/i)||[])[1]||'';const g=(line.match(/group-title=["']([^"']*)["']/i)||[])[1]||'Khác';meta={name,logo,group:g}}else if(line&&!line.startsWith('#')&&meta){out.push({...meta,url:line});meta=null}}return out}
 function render(){const q=search.value.trim().toLowerCase();const visible=channels.map((c,i)=>({...c,i})).filter(c=>(group==='Tất cả'||c.group===group)&&((c.name+' '+c.group).toLowerCase().includes(q)));count.textContent=channels.length+' kênh';if(!visible.length){channelsEl.innerHTML='<div class="status" style="padding:12px">Không tìm thấy kênh.</div>';return}channelsEl.innerHTML=visible.map(c=>`<button class="channel ${c.i===active?'active':''}" data-i="${c.i}"><span class="icon">${c.logo?`<img src="${esc(c.logo)}" loading="lazy" onerror="this.style.display='none'">`:'TV'}</span><span style="min-width:0"><span class="channel-name">${esc(c.name)}</span><span class="channel-group">${esc(c.group)}</span></span></button>`).join('');channelsEl.querySelectorAll('.channel').forEach(b=>b.onclick=()=>play(+b.dataset.i))}
 function renderGroups(){const gs=['Tất cả',...new Set(channels.map(c=>c.group).filter(Boolean))];groupsEl.innerHTML=gs.map(g=>`<button class="group ${g===group?'active':''}">${esc(g)}</button>`).join('');groupsEl.querySelectorAll('.group').forEach(b=>b.onclick=()=>{group=b.textContent;renderGroups();render()})}
-function play(i){const c=channels[i];if(!c)return;active=i;empty.classList.add('hide');nowName.textContent=c.name;statusEl.textContent=c.group||'Đang phát';render();if(hls){hls.destroy();hls=null}video.pause();video.removeAttribute('src');video.load();if(/\.m3u8(?:$|\?)/i.test(c.url)&&window.Hls&&Hls.isSupported()){hls=new Hls({enableWorker:true,lowLatencyMode:true});hls.loadSource(c.url);hls.attachMedia(video);hls.on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>{}));hls.on(Hls.Events.ERROR,(e,d)=>{if(d.fatal)statusEl.textContent='Stream không phát được hoặc máy chủ chặn CORS.'})}else{video.src=c.url;video.play().catch(()=>{})}}
+function isHlsUrl(url){
+  return /\.m3u8(?:$|[?#])/i.test(url) || /(?:^|[?&])(format|type)=?(?:hls|m3u8)/i.test(url);
+}
+function showError(title,text){
+  document.getElementById('errorTitle').textContent=title;
+  document.getElementById('errorText').textContent=text;
+  document.getElementById('streamError').classList.add('show');
+  statusEl.textContent=title;
+}
+function hideError(){document.getElementById('streamError').classList.remove('show')}
+function cleanup(){
+  if(hls){hls.destroy();hls=null}
+  video.pause(); video.removeAttribute('src'); video.load();
+}
+function play(i){
+  const c=channels[i]; if(!c)return;
+  active=i; render(); hideError(); nowName.textContent=c.name; statusEl.textContent='Đang kết nối…';
+  cleanup();
+  if(/^http:\/\//i.test(c.url) && location.protocol==='https:'){
+    showError('Nguồn HTTP bị trình duyệt chặn','Trang đang chạy HTTPS nhưng stream dùng HTTP. Browser sẽ chặn mixed content.');
+    return;
+  }
+  const hlsUrl=isHlsUrl(c.url);
+  if(hlsUrl && window.Hls && Hls.isSupported()){
+    hls=new Hls({enableWorker:true,lowLatencyMode:true,backBufferLength:30,manifestLoadingTimeOut:12000,levelLoadingTimeOut:12000,fragLoadingTimeOut:15000});
+    hls.on(Hls.Events.ERROR,(event,data)=>{
+      if(!data.fatal)return;
+      let msg='Không thể tải stream.';
+      if(data.type===Hls.ErrorTypes.NETWORK_ERROR) msg='Không tải được stream. Có thể nguồn đang offline, 403 hoặc CORS không cho phép.';
+      else if(data.type===Hls.ErrorTypes.MEDIA_ERROR) msg='Stream đã tải nhưng trình duyệt không giải mã được định dạng này.';
+      else msg='HLS gặp lỗi nghiêm trọng khi phát stream.';
+      try{hls.destroy()}catch(e){} hls=null; showError('Không phát được kênh',msg);
+    });
+    hls.on(Hls.Events.MANIFEST_PARSED,()=>{
+      statusEl.textContent='Đã kết nối — đang phát';
+      video.play().catch(()=>{statusEl.textContent='Đã tải stream — bấm ▶ để phát';});
+    });
+    hls.loadSource(c.url); hls.attachMedia(video);
+  }else if(video.canPlayType('application/vnd.apple.mpegurl')){
+    video.src=c.url;
+    video.addEventListener('loadedmetadata',()=>{statusEl.textContent='Đã kết nối — đang phát';video.play().catch(()=>{statusEl.textContent='Đã tải stream — bấm ▶ để phát'})},{once:true});
+    video.addEventListener('error',()=>showError('Không phát được kênh','Safari không tải được nguồn HLS. Kiểm tra URL, CORS hoặc trạng thái máy chủ.'),{once:true});
+    video.load();
+  }else if(/\.(mp4|webm|ogg)(?:$|[?#])/i.test(c.url)){
+    video.src=c.url;
+    video.addEventListener('loadedmetadata',()=>{statusEl.textContent='Đã kết nối — đang phát';video.play().catch(()=>{statusEl.textContent='Đã tải video — bấm ▶ để phát'})},{once:true});
+    video.addEventListener('error',()=>showError('Không phát được video','Định dạng video không được trình duyệt hỗ trợ hoặc server đã chặn truy cập.'),{once:true});
+    video.load();
+  }else{
+    showError('Nguồn stream không phù hợp với web','URL này không phải HLS/MP4 mà trình duyệt có thể phát trực tiếp. Nếu đây là IPTV, cần URL .m3u8 hoặc một web-compatible stream.');
+  }
+}
 async function load(){active=-1;group='Tất cả';channelsEl.innerHTML='<div class="status" style="padding:12px">Đang tải playlist…</div>';statusEl.textContent='Đang tải danh sách kênh…';try{const r=await fetch(M3U_URL,{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);channels=parse(await r.text());renderGroups();render();statusEl.textContent=channels.length?`Đã tải ${channels.length} kênh`:'Playlist không có kênh hợp lệ';}catch(e){channels=[];renderGroups();render();statusEl.textContent='Không tải được M3U. Kiểm tra URL hoặc CORS.';channelsEl.innerHTML='<div class="status" style="padding:12px">Không tải được playlist M3U.<br><br>Kiểm tra CORS của file M3U và các stream.</div>';console.warn(e)}}
-search.addEventListener('input',render);document.getElementById('reload').onclick=load;document.getElementById('openM3U').onclick=()=>window.open(M3U_URL,'_blank');document.getElementById('copyM3U').onclick=async()=>{await navigator.clipboard.writeText(M3U_URL);document.getElementById('copyM3U').textContent='Đã copy';setTimeout(()=>document.getElementById('copyM3U').textContent='Copy M3U',1200)};load();
+search.addEventListener('input',render);document.getElementById('reload').onclick=load;document.getElementById('retry').onclick=()=>{if(active>=0)play(active)};document.getElementById('openM3U').onclick=()=>window.open(M3U_URL,'_blank');document.getElementById('copyM3U').onclick=async()=>{await navigator.clipboard.writeText(M3U_URL);document.getElementById('copyM3U').textContent='Đã copy';setTimeout(()=>document.getElementById('copyM3U').textContent='Copy M3U',1200)};load();
 </script>
 </body></html>
