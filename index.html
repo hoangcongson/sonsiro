@@ -1133,6 +1133,257 @@
   }
 }
 
+
+/* === Final mobile sizing fix === */
+@media(max-width:600px){
+  html,body{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+  }
+
+  body{
+    min-width:0;
+  }
+
+  .container{
+    width:100%;
+    max-width:100%;
+    margin:0 auto;
+    padding:6px;
+    overflow-x:hidden;
+  }
+
+  .header,
+  .layout,
+  .player-card,
+  .side,
+  .section{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+  }
+
+  .header{
+    min-height:76px;
+    padding:10px 11px;
+    border-radius:16px;
+    gap:8px;
+  }
+
+  .brand-wrap{
+    min-width:0;
+    max-width:calc(100% - 72px);
+    gap:8px;
+  }
+
+  .brand-icon{
+    width:42px;
+    height:42px;
+    flex:0 0 42px;
+    border-radius:13px;
+    font-size:21px;
+  }
+
+  .brand{
+    min-width:0;
+    max-width:100%;
+  }
+
+  .brand-name{
+    display:block;
+    width:100%;
+    max-width:100%;
+    font-size:21px;
+    line-height:1.05;
+    letter-spacing:.1px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .brand-sub{
+    max-width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-size:7px;
+    letter-spacing:.65px;
+    margin-top:5px;
+  }
+
+  .brand-glow{
+    width:68px;
+    height:2px;
+    margin-top:5px;
+  }
+
+  .actions{
+    flex:0 0 auto;
+    gap:4px;
+  }
+
+  .header .btn{
+    padding:7px 8px;
+    font-size:9px;
+    white-space:nowrap;
+  }
+
+  .layout{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:8px;
+    margin-top:8px;
+  }
+
+  .side{
+    order:-1;
+    overflow:hidden;
+    border-radius:13px;
+  }
+
+  .side-title{
+    padding:9px 11px;
+    font-size:13px;
+  }
+
+  .search{
+    display:block;
+    width:calc(100% - 16px);
+    margin:8px;
+    padding:9px 10px;
+    font-size:12px;
+  }
+
+  .side .group-list{
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
+    overflow-x:auto;
+    overflow-y:hidden;
+    flex-wrap:nowrap;
+    padding:6px 8px 8px;
+  }
+
+  .side .gitem{
+    flex:0 0 auto;
+    min-width:max-content;
+    max-width:none;
+    padding:7px 10px;
+    font-size:11px;
+  }
+
+  .player-head{
+    padding:9px 11px;
+    font-size:12px;
+  }
+
+  .player-wrap{
+    width:100%;
+    max-width:100%;
+    aspect-ratio:16 / 9;
+  }
+
+  .now{
+    padding:8px 10px;
+    font-size:11px;
+    line-height:1.25;
+  }
+
+  .tabs{
+    width:100%;
+    max-width:100%;
+    margin:7px 0 9px;
+    padding:7px 7px 9px;
+    gap:6px;
+  }
+
+  .tab{
+    min-height:34px;
+    padding:7px 10px;
+    font-size:10px;
+  }
+
+  .section-title{
+    padding:10px 12px;
+    font-size:12px;
+  }
+
+  .channels{
+    width:100%;
+    max-width:100%;
+    padding:8px;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:6px;
+  }
+
+  .channel{
+    min-width:0;
+    padding:5px;
+    border-radius:9px;
+  }
+
+  .logo{
+    height:38px;
+  }
+
+  .logo img{
+    max-height:32px;
+  }
+
+  .cname{
+    font-size:9px;
+    margin-top:5px;
+  }
+
+  .fav-btn{
+    width:24px;
+    height:24px;
+    top:5px;
+    right:5px;
+    font-size:14px;
+  }
+
+  .quality-button{
+    min-width:92px;
+    height:29px;
+    padding:0 8px;
+    font-size:9px;
+  }
+
+  .quality-menu{
+    min-width:145px;
+    max-width:calc(100vw - 20px);
+  }
+
+  .status-footer{
+    width:100%;
+    max-width:100%;
+    margin-top:8px;
+  }
+
+  .status-bar{
+    width:100%;
+    min-height:64px;
+    padding:7px 8px;
+    border-radius:14px;
+  }
+
+  .status-value{font-size:16px}
+  .status-label{font-size:8px}
+  .status-lunar{font-size:7px}
+  .status-time{
+    right:8px;
+    font-size:16px;
+    padding-left:7px;
+  }
+
+  .status-live{
+    padding:5px 7px;
+    font-size:6px;
+  }
+}
+
 </style>
 </head>
 <body>
