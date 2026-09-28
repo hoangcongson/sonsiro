@@ -1036,6 +1036,103 @@
 }
 
 
+
+/* === Mobile category dock fix === */
+@media(max-width:900px){
+  .side{
+    width:100%;
+    overflow:visible;
+  }
+
+  .side .group-list{
+    display:flex;
+    flex-wrap:nowrap;
+    align-items:stretch;
+    width:100%;
+    max-width:100%;
+    max-height:none;
+    overflow-x:auto;
+    overflow-y:hidden;
+    gap:7px;
+    padding:8px 10px 10px;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(45,154,126,.70) rgba(205,235,226,.45);
+  }
+
+  .side .group-list::-webkit-scrollbar{
+    height:6px;
+  }
+
+  .side .group-list::-webkit-scrollbar-track{
+    background:rgba(205,235,226,.45);
+    border-radius:999px;
+  }
+
+  .side .group-list::-webkit-scrollbar-thumb{
+    background:linear-gradient(90deg,#2b9b7d,#5fc19f);
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.58);
+  }
+
+  .side .gitem{
+    flex:0 0 auto;
+    width:max-content;
+    min-width:max-content;
+    margin:0;
+    padding:9px 13px;
+    white-space:nowrap;
+    border:1px solid rgba(255,255,255,.58);
+    border-radius:12px;
+    background:
+      linear-gradient(180deg,rgba(255,255,255,.58),rgba(255,255,255,.22));
+    box-shadow:
+      0 4px 10px rgba(27,103,86,.08),
+      inset 0 1px 0 rgba(255,255,255,.78);
+  }
+
+  .side .gitem .gicon{
+    flex:0 0 auto;
+    font-size:17px;
+  }
+
+  .side .gitem.active{
+    background:linear-gradient(135deg,rgba(57,174,138,.86),rgba(35,123,104,.72));
+    color:#fff;
+  }
+}
+
+@media(max-width:600px){
+  .side .group-list{
+    gap:6px;
+    padding:7px 9px 9px;
+  }
+
+  .side .gitem{
+    padding:8px 12px;
+    border-radius:11px;
+    font-size:12px;
+  }
+
+  .side .gitem .gicon{
+    font-size:16px;
+  }
+}
+
+
+@media(max-width:900px){
+  .tabs,
+  .side .group-list{
+    touch-action:pan-x;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+    scroll-snap-type:x proximity;
+  }
+  .tabs .tab,
+  .side .gitem{
+    scroll-snap-align:start;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1346,6 +1443,50 @@ function toggleFavorite(event,index){
   renderGroups();
   renderTabs();
   renderChannels();
+}
+
+
+function initMobileSwipeGroups(){
+  const targets=[
+    document.getElementById("tabs"),
+    document.getElementById("groups")
+  ].filter(Boolean);
+
+  targets.forEach(el=>{
+    let startX=0;
+    let startY=0;
+    let tracking=false;
+
+    el.addEventListener("touchstart",e=>{
+      if(!e.touches||!e.touches[0]) return;
+      startX=e.touches[0].clientX;
+      startY=e.touches[0].clientY;
+      tracking=true;
+    },{passive:true});
+
+    el.addEventListener("touchend",e=>{
+      if(!tracking||!e.changedTouches||!e.changedTouches[0]) return;
+      tracking=false;
+
+      const dx=e.changedTouches[0].clientX-startX;
+      const dy=e.changedTouches[0].clientY-startY;
+
+      if(Math.abs(dx)<55 || Math.abs(dx)<Math.abs(dy)*1.25) return;
+
+      const index=GROUPS.indexOf(currentGroup);
+      if(index<0) return;
+
+      // Vuốt trái = nhóm kế tiếp, vuốt phải = nhóm trước.
+      const nextIndex=dx<0 ? Math.min(GROUPS.length-1,index+1) : Math.max(0,index-1);
+      if(nextIndex!==index){
+        selectGroup(GROUPS[nextIndex]);
+        const active=el.querySelector(".active");
+        if(active && active.scrollIntoView){
+          active.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
+        }
+      }
+    },{passive:true});
+  });
 }
 
 function selectGroup(g){
@@ -1750,6 +1891,7 @@ function startStatusClock(){
 setupQualitySelector();
 
 setupQualitySelector();
+initMobileSwipeGroups();
 renderGroups();renderTabs();renderChannels();renderCurrentDate();startStatusClock();
 </script>
 </body>
